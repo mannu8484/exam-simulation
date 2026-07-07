@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMR Practice — Answer Sheet Simulator</title>
+<style>
+  :root{
+    --navy:#0f2942;
+    --blue:#1a56a0;
+    --blue-light:#2f7bd1;
+    --paper:#eef1f5;
+    --card:#ffffff;
+    --ink:#1c2733;
+    --muted:#5c6b7a;
+    --line:#dde3ea;
+    --green:#2e9e5b;
+    --green-dark:#1f7a44;
+    --red:#c94a3f;
+    --amber:#d99a2b;
+    --purple:#6b4fa0;
+    --gray:#aeb8c2;
+    --focus:#2f7bd1;
+    --mono: "SF Mono", "Consolas", "Menlo", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;}
+  ::selection{background:#bcd6f5;}
+
+  /* ---------- utility ---------- */
+  .hidden{display:none !important;}
+  .screen{min-height:100vh;display:flex;flex-direction:column;}
+
+  /* ---------- HOME SCREEN ---------- */
+  #home-screen{
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #16345a 0%, transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, #0d1f33 0%, transparent 55%),
+      var(--navy);
+  }
+  .home-card{
+    width:100%;
+    max-width:480px;
+    background:var(--card);
+    border-radius:14px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+  .home-head{
+    background:var(--navy);
+    color:#fff;
+    padding:26px 28px 22px;
+    position:relative;
+  }
+  .home-head .kicker{
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#8fb4dd;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .home-head h1{
+    margin:0;
+    font-size:24px;
+    font-weight:750;
+    letter-spacing:-.01em;
+  }
+  .home-head p{
+    margin:8px 0 0;
+    font-size:13.5px;
+    color:#b7c8dc;
+    line-height:1.5;
+  }
+  .omr-strip{
+    display:flex;
+    gap:6px;
+    margin-top:16px;
+  }
+  .omr-strip span{
+    width:20px;height:20px;border-radius:50%;
+    border:2px solid #3f6690;
+  }
+  .omr-strip span:nth-child(2){border-color:#4a7aab;}
+  .omr-strip span.filled{background:#5fa0e6;border-color:#5fa0e6;}
+
+  .home-body{padding:26px 28px 28px;}
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--navy);
+    margin-bottom:6px;
+    letter-spacing:.01em;
+  }
+  .field .hint{
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:5px;
+  }
+  .field input[type=number]{
+    width:100%;
+    padding:11px 12px;
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    font-size:15px;
+    color:var(--ink);
+    background:#fbfcfe;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .field input[type=number]:focus{
+    outline:none;
+    border-color:var(--focus);
+    box-shadow:0 0 0 3px rgba(47,123,209,.15);
+    background:#fff;
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  details.advanced{
+    margin-bottom:20px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#fafbfd;
+  }
+  details.advanced summary{
+    cursor:pointer;
+    list-style:none;
+    padding:11px 14px;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--blue);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  details.advanced summary::-webkit-details-marker{display:none;}
+  details.advanced summary::after{content:"+";font-size:16px;color:var(--muted);}
+  details.advanced[open] summary::after{content:"–";}
+  .advanced-body{padding:2px 14px 14px;}
+
+  .start-btn{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:9px;
+    background:var(--blue);
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:.01em;
+    cursor:pointer;
+    transition:background .15s, transform .05s;
+  }
+  .start-btn:hover{background:var(--blue-light);}
+  .start-btn:active{transform:translateY(1px);}
+  .err-msg{
+    color:var(--red);
+    font-size:12.5px;
+    margin-top:10px;
+    display:none;
+    font-weight:600;
+  }
+  .foot-note{
+    text-align:center;
+    font-size:11px;
+    color:#8fa0b3;
+    margin-top:14px;
+    padding:0 20px 4px;
+  }
+
+  /* ---------- TEST SCREEN ---------- */
+  #test-screen{background:var(--paper);}
+  .test-header{
+    background:var(--navy);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 20px;
+    flex-wrap:wrap;
+    gap:10px;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .test-title{
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:.02em;
+  }
+  .timer-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:14px;
+    background:rgba(255,255,255,.08);
+    padding:7px 14px;
+    border-radius:8px;
+  }
+  .timer-wrap.low{background:rgba(201,74,63,.85);}
+  .timer-num{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:15px;}
+
+  .test-body{
+    flex:1;
+    display:flex;
+    align-items:stretch;
+    max-width:1400px;
+    width:100%;
+    margin:0 auto;
+    gap:18px;
+    padding:18px 18px 24px;
+  }
+  @media (max-width: 900px){
+    .test-body{flex-direction:column;padding:12px;}
+  }
+
+  .question-panel{
+    flex:1;
+    background:var(--card);
+    border-radius:12px;
+    border:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    min-width:0;
+  }
+  .qp-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 20px;
+    border-bottom:1px solid var(--line);
+    background:#f7f9fb;
+  }
+  .qp-number{
+    font-size:14px;
+    font-weight:800;
+    color:var(--navy);
+  }
+  .qp-marks{
+    font-size:12px;
+    color:var(--muted);
+  }
+  .qp-marks b.pos{color:var(--green-dark);}
+  .qp-marks b.neg{color:var(--red);}
+
+  .qp-content{
+    padding:28px 30px 20px;
+    flex:1;
+  }
+  .qp-question-label{
+    font-size:12px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:16px;
+  }
+  .qp-bignum{
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:22px;
+  }
+
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    max-width:420px;
+  }
+  .option-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:13px 16px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    cursor:pointer;
+    background:#fff;
+    transition:border-color .12s, background .12s;
+    user-select:none;
+  }
+  .option-row:hover{border-color:#a9c6e8;background:#f5f9ff;}
+  .option-row.selected{
+    border-color:var(--blue);
+    background:#eaf2fc;
+  }
+  .option-letter{
+    width:34px;height:34px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    font-size:14px;
+    color:var(--muted);
+    flex-shrink:0;
+    transition:all .12s;
+  }
+  .option-row.selected .option-letter{
+    border-color:var(--blue);
+    background:var(--blue);
+    color:#fff;
+  }
+  .option-text{font-size:13.5px;color:var(--muted);}
+
+  .qp-actions{
+    display:flex;
+    gap:10px;
+    padding:16px 20px;
+    border-top:1px solid var(--line);
+    flex-wrap:wrap;
+    background:#f7f9fb;
+  }
+  .btn{
+    padding:10px 16px;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    transition:filter .1s, transform .05s;
+    white-space:nowrap;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-mark{color:var(--purple);border-color:#d6cbe9;}
+  .btn-clear{color:var(--red);border-color:#eccac6;}
+  .btn-nav{color:var(--navy);}
+  .btn-primary{
+    background:var(--blue);
+    color:#fff;
+    border-color:var(--blue);
+    margin-left:auto;
+  }
+  .btn-primary:hover{background:var(--blue-light);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* palette sidebar */
+  .side-panel{
+    width:300px;
+    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  @media (max-width: 900px){ .side-panel{width:100%;} }
+
+  .legend-card, .grid-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:12.5px;
+    color:var(--ink);
+    padding:5px 0;
+  }
+  .legend-count{
+    width:26px;height:26px;
+    border-radius:50%;
+    color:#fff;
+    font-weight:800;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .lc-answered{background:var(--green);}
+  .lc-not-answered{background:var(--red);}
+  .lc-not-visited{background:var(--gray);color:#3a434c;}
+  .lc-marked{background:var(--purple);}
+  .lc-answered-marked{background:var(--purple);position:relative;}
+  .lc-answered-marked::after{
+    content:"";
+    position:absolute;bottom:-2px;right:-2px;
+    width:9px;height:9px;border-radius:50%;
+    background:var(--green);border:1.5px solid #fff;
+  }
+
+  .grid-card h4{
+    margin:0 0 12px;
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.07em;
+  }
+  .qgrid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:8px;
+    max-height:340px;
+    overflow-y:auto;
+    padding-right:2px;
+  }
+  .qbtn{
+    aspect-ratio:1;
+    border-radius:7px;
+    border:none;
+    font-size:12.5px;
+    font-weight:800;
+    color:#fff;
+    cursor:pointer;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .qbtn.current{
+    outline:2.5px solid var(--navy);
+    outline-offset:2px;
+  }
+  .qbtn.st-not-visited{background:var(--gray);color:#3a434c;}
+  .qbtn.st-not-answered{background:var(--red);}
+  .qbtn.st-answered{background:var(--green);}
+  .qbtn.st-marked{background:var(--purple);}
+  .qbtn.st-answered-marked{background:var(--purple);}
+  .qbtn.st-answered-marked::after{
+    content:"";position:absolute;bottom:2px;right:2px;
+    width:7px;height:7px;border-radius:50%;background:var(--green);border:1px solid #fff;
+  }
+
+  .submit-test-btn{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:9px;
+    background:var(--red);
+    color:#fff;
+    font-weight:800;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  .submit-test-btn:hover{filter:brightness(1.08);}
+
+  /* ---------- RESULT SCREEN ---------- */
+  #result-screen{background:var(--paper);padding:28px 16px 60px;}
+  .result-wrap{max-width:980px;margin:0 auto;}
+  .result-head{
+    background:var(--navy);
+    color:#fff;
+    border-radius:14px;
+    padding:26px 28px;
+    margin-bottom:20px;
+  }
+  .result-head h1{margin:0 0 4px;font-size:22px;}
+  .result-head p{margin:0;color:#b7c8dc;font-size:13px;}
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
+    gap:12px;
+    margin-bottom:22px;
+  }
+  .stat-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+  }
+  .stat-card .num{font-size:24px;font-weight:800;color:var(--navy);line-height:1.1;}
+  .stat-card .lbl{font-size:11.5px;color:var(--muted);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .stat-card.acc-green .num{color:var(--green-dark);}
+  .stat-card.acc-red .num{color:var(--red);}
+  .stat-card.acc-purple .num{color:var(--purple);}
+  .stat-card.acc-blue .num{color:var(--blue);}
+
+  .score-key-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 20px;
+    margin-bottom:22px;
+  }
+  .score-key-card h3{margin:0 0 4px;font-size:14.5px;color:var(--navy);}
+  .score-key-card p{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .key-input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .key-input-row textarea{
+    flex:1;
+    min-width:240px;
+    min-height:60px;
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    resize:vertical;
+  }
+  .key-input-row button{
+    padding:11px 18px;
+    border:none;
+    border-radius:8px;
+    background:var(--navy);
+    color:#fff;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    align-self:flex-start;
+  }
+  .key-err{color:var(--red);font-size:12px;margin-top:8px;display:none;font-weight:600;}
+
+  .table-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  table.result-table{width:100%;border-collapse:collapse;font-size:13px;}
+  table.result-table th{
+    background:#f7f9fb;
+    text-align:left;
+    padding:10px 14px;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--muted);
+    border-bottom:1px solid var(--line);
+  }
+  table.result-table td{
+    padding:10px 14px;
+    border-bottom:1px solid #eef1f5;
+    color:var(--ink);
+  }
+  table.result-table tr:last-child td{border-bottom:none;}
+  .tag{
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+  }
+  .tag-answered{background:var(--green);}
+  .tag-not-answered{background:var(--red);}
+  .tag-not-visited{background:var(--gray);color:#3a434c;}
+  .tag-marked{background:var(--purple);}
+  .tag-answered-marked{background:var(--purple);}
+  .tag-correct{background:var(--green-dark);}
+  .tag-wrong{background:var(--red);}
+  .tag-unchecked{background:var(--gray);color:#3a434c;}
+
+  .restart-btn{
+    display:block;
+    width:100%;
+    max-width:280px;
+    margin:8px auto 0;
+    padding:12px;
+    border:none;
+    border-radius:9px;
+    background:var(--blue);
+    color:#fff;
+    font-weight:800;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .restart-btn:hover{background:var(--blue-light);}
+
+  .mono{font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<!-- ============ HOME SCREEN ============ -->
+<div id="home-screen" class="screen">
+  <div class="home-card">
+    <div class="home-head">
+      <div class="kicker">OMR Practice Sheet</div>
+      <h1>Answer Sheet Simulator</h1>
+      <p>Bubble your answers on screen exactly like an exam portal — for the questions you already have on paper.</p>
+      <div class="omr-strip">
+        <span class="filled"></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="home-body">
+      <div class="row2">
+        <div class="field">
+          <label for="numQuestions">Number of questions</label>
+          <input type="number" id="numQuestions" min="1" max="300" value="25" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label for="timeMinutes">Time limit (minutes)</label>
+          <input type="number" id="timeMinutes" min="1" max="600" value="60" inputmode="numeric">
+        </div>
+      </div>
+
+      <details class="advanced">
+        <summary>Marking scheme (optional)</summary>
+        <div class="advanced-body">
+          <div class="row2">
+            <div class="field" style="margin-bottom:0;">
+              <label for="marksCorrect">Marks for correct</label>
+              <input type="number" id="marksCorrect" min="0" step="0.25" value="2">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label for="marksWrong">Negative for wrong</label>
+              <input type="number" id="marksWrong" min="0" step="0.25" value="0.5">
+            </div>
+          </div>
+          <div class="hint">Only used later if you choose to score your attempt against an answer key.</div>
+        </div>
+      </details>
+
+      <button class="start-btn" id="startBtn">Start Test</button>
+      <div class="err-msg" id="homeErr"></div>
+      <div class="foot-note">No sign-up, nothing saved. Refresh at any time to start over.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TEST SCREEN ============ -->
+<div id="test-screen" class="screen hidden">
+  <div class="test-header">
+    <div class="test-title">Practice Test</div>
+    <div class="timer-wrap" id="timerWrap">
+      <span>Time Left</span>
+      <span class="timer-num" id="timerNum">00:00:00</span>
+    </div>
+  </div>
+
+  <div class="test-body">
+    <div class="question-panel">
+      <div class="qp-topbar">
+        <div class="qp-number" id="qpNumber">Question No. 1</div>
+        <div class="qp-marks">+<b class="pos" id="mcPos">2</b> / <b class="neg" id="mcNeg">-0.5</b></div>
+      </div>
+      <div class="qp-content">
+        <div class="qp-question-label">Your paper question</div>
+        <div class="qp-bignum">Mark the option you selected on your answer sheet for this question.</div>
+        <div class="options" id="optionsWrap"></div>
+      </div>
+      <div class="qp-actions">
+        <button class="btn btn-mark" id="markBtn">Mark for Review &amp; Next</button>
+        <button class="btn btn-clear" id="clearBtn">Clear Response</button>
+        <button class="btn btn-nav" id="prevBtn">Previous</button>
+        <button class="btn btn-primary" id="nextBtn">Save &amp; Next</button>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="legend-card">
+        <div class="legend-item"><span class="legend-count lc-answered" id="cntAnswered">0</span> Answered</div>
+        <div class="legend-item"><span class="legend-count lc-not-answered" id="cntNotAnswered">0</span> Not Answered</div>
+        <div class="legend-item"><span class="legend-count lc-not-visited" id="cntNotVisited">0</span> Not Visited</div>
+        <div class="legend-item"><span class="legend-count lc-marked" id="cntMarked">0</span> Marked for Review</div>
+        <div class="legend-item"><span class="legend-count lc-answered-marked" id="cntAnsweredMarked">0</span> Answered &amp; Marked</div>
+      </div>
+      <div class="grid-card">
+        <h4>Jump to question</h4>
+        <div class="qgrid" id="qGrid"></div>
+      </div>
+      <button class="submit-test-btn" id="submitBtn">Submit Test</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ RESULT SCREEN ============ -->
+<div id="result-screen" class="screen hidden">
+  <div class="result-wrap">
+    <div class="result-head">
+      <h1 id="resultTitle">Test Submitted</h1>
+      <p id="resultSub">Here's your response sheet.</p>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="score-key-card">
+      <h3>Score against an answer key (optional)</h3>
+      <p>Paste your correct answers as letters in order, one per question — e.g. <span class="mono">A,C,B,D,A,...</span> or one per line. Only used in your browser, nothing is uploaded.</p>
+      <div class="key-input-row">
+        <textarea id="keyInput" placeholder="A,B,C,D,A,C,B,..."></textarea>
+        <button id="checkKeyBtn">Check Score</button>
+      </div>
+      <div class="key-err" id="keyErr"></div>
+    </div>
+
+    <div class="table-card">
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th>Q.No</th>
+            <th>Your Answer</th>
+            <th>Status</th>
+            <th>Time Taken</th>
+            <th id="colResultHeader">Result</th>
+          </tr>
+        </thead>
+        <tbody id="resultTableBody"></tbody>
+      </table>
+    </div>
+
+    <button class="restart-btn" id="restartBtn">Start a New Test</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- state ----------------
+  let N = 0;
+  let totalTimeSec = 0;
+  let remainingSec = 0;
+  let marksCorrect = 2;
+  let marksWrong = 0.5;
+
+  let answers = [];      // null | 'A'|'B'|'C'|'D'
+  let status  = [];      // 'not-visited' | 'not-answered' | 'answered' | 'marked' | 'answered-marked'
+  let timeSpentMs = [];  // per question accumulated
+  let current = 0;
+  let questionStartTs = null;
+  let timerInterval = null;
+  let submitted = false;
+
+  const LETTERS = ['A','B','C','D'];
+
+  // ---------------- elements ----------------
+  const homeScreen = document.getElementById('home-screen');
+  const testScreen = document.getElementById('test-screen');
+  const resultScreen = document.getElementById('result-screen');
+
+  const numQuestionsInp = document.getElementById('numQuestions');
+  const timeMinutesInp = document.getElementById('timeMinutes');
+  const marksCorrectInp = document.getElementById('marksCorrect');
+  const marksWrongInp = document.getElementById('marksWrong');
+  const startBtn = document.getElementById('startBtn');
+  const homeErr = document.getElementById('homeErr');
+
+  const timerNum = document.getElementById('timerNum');
+  const timerWrap = document.getElementById('timerWrap');
+  const qpNumber = document.getElementById('qpNumber');
+  const optionsWrap = document.getElementById('optionsWrap');
+  const markBtn = document.getElementById('markBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const qGrid = document.getElementById('qGrid');
+  const mcPos = document.getElementById('mcPos');
+  const mcNeg = document.getElementById('mcNeg');
+
+  const cntAnswered = document.getElementById('cntAnswered');
+  const cntNotAnswered = document.getElementById('cntNotAnswered');
+  const cntNotVisited = document.getElementById('cntNotVisited');
+  const cntMarked = document.getElementById('cntMarked');
+  const cntAnsweredMarked = document.getElementById('cntAnsweredMarked');
+
+  const statGrid = document.getElementById('statGrid');
+  const resultTableBody = document.getElementById('resultTableBody');
+  const resultTitle = document.getElementById('resultTitle');
+  const resultSub = document.getElementById('resultSub');
+  const keyInput = document.getElementById('keyInput');
+  const checkKeyBtn = document.getElementById('checkKeyBtn');
+  const keyErr = document.getElementById('keyErr');
+  const colResultHeader = document.getElementById('colResultHeader');
+  const restartBtn = document.getElementById('restartBtn');
+
+  // ---------------- home screen ----------------
+  startBtn.addEventListener('click', function(){
+    const n = parseInt(numQuestionsInp.value, 10);
+    const mins = parseFloat(timeMinutesInp.value);
+    const mc = parseFloat(marksCorrectInp.value);
+    const mw = parseFloat(marksWrongInp.value);
+
+    if(!n || n < 1 || n > 300){
+      showHomeErr('Enter a number of questions between 1 and 300.');
+      return;
+    }
+    if(!mins || mins <= 0 || mins > 600){
+      showHomeErr('Enter a time limit between 1 and 600 minutes.');
+      return;
+    }
+    homeErr.style.display = 'none';
+
+    N = n;
+    totalTimeSec = Math.round(mins * 60);
+    remainingSec = totalTimeSec;
+    marksCorrect = isNaN(mc) ? 2 : mc;
+    marksWrong = isNaN(mw) ? 0.5 : Math.abs(mw);
+
+    answers = new Array(N).fill(null);
+    status = new Array(N).fill('not-visited');
+    timeSpentMs = new Array(N).fill(0);
+    current = 0;
+    submitted = false;
+
+    mcPos.textContent = marksCorrect;
+    mcNeg.textContent = '-' + marksWrong;
+
+    buildGrid();
+    homeScreen.classList.add('hidden');
+    testScreen.classList.remove('hidden');
+
+    startTimer();
+    enterQuestion(0);
+  });
+
+  function showHomeErr(msg){
+    homeErr.textContent = msg;
+    homeErr.style.display = 'block';
+  }
+
+  // ---------------- timer ----------------
+  function startTimer(){
+    updateTimerDisplay();
+    timerInterval = setInterval(function(){
+      remainingSec--;
+      if(remainingSec <= 0){
+        remainingSec = 0;
+        updateTimerDisplay();
+        clearInterval(timerInterval);
+        finishTest(true);
+        return;
+      }
+      updateTimerDisplay();
+    }, 1000);
+  }
+
+  function updateTimerDisplay(){
+    const h = Math.floor(remainingSec/3600);
+    const m = Math.floor((remainingSec%3600)/60);
+    const s = remainingSec%60;
+    timerNum.textContent = [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+    if(remainingSec <= 60){
+      timerWrap.classList.add('low');
+    }
+  }
+
+  // ---------------- question navigation ----------------
+  function enterQuestion(idx){
+    current = idx;
+    if(status[idx] === 'not-visited'){
+      status[idx] = 'not-answered';
+    }
+    questionStartTs = Date.now();
+    renderQuestion();
+    renderGrid();
+    renderLegendCounts();
+  }
+
+  function commitTimeSpent(){
+    if(questionStartTs !== null){
+      const elapsed = Date.now() - questionStartTs;
+      timeSpentMs[current] += elapsed;
+      questionStartTs = null;
+    }
+  }
+
+  function renderQuestion(){
+    qpNumber.textContent = 'Question No. ' + (current+1) + ' of ' + N;
+    optionsWrap.innerHTML = '';
+    LETTERS.forEach(function(letter){
+      const row = document.createElement('div');
+      row.className = 'option-row' + (answers[current] === letter ? ' selected' : '');
+      row.innerHTML = '<span class="option-letter">'+letter+'</span><span class="option-text">Option '+letter+'</span>';
+      row.addEventListener('click', function(){ selectOption(letter); });
+      optionsWrap.appendChild(row);
+    });
+    prevBtn.disabled = (current === 0);
+  }
+
+  function selectOption(letter){
+    answers[current] = letter;
+    if(status[current] === 'marked' || status[current] === 'answered-marked'){
+      status[current] = 'answered-marked';
+    } else {
+      status[current] = 'answered';
+    }
+    renderQuestion();
+    renderGrid();
+    renderLegendCounts();
+  }
+
+  clearBtn.addEventListener('click', function(){
+    answers[current] = null;
+    if(status[current] === 'answered-marked'){
+      status[current] = 'marked';
+    } else {
+      status[current] = 'not-answered';
+    }
+    renderQuestion();
+    renderGrid();
+    renderLegendCounts();
+  });
+
+  nextBtn.addEventListener('click', function(){
+    commitTimeSpent();
+    if(current < N-1){
+      enterQuestion(current+1);
+    } else {
+      enterQuestion(current); // stay, recompute
+    }
+  });
+
+  prevBtn.addEventListener('click', function(){
+    commitTimeSpent();
+    if(current > 0){
+      enterQuestion(current-1);
+    }
+  });
+
+  markBtn.addEventListener('click', function(){
+    if(answers[current] !== null){
+      status[current] = 'answered-marked';
+    } else {
+      status[current] = 'marked';
+    }
+    commitTimeSpent();
+    if(current < N-1){
+      enterQuestion(current+1);
+    } else {
+      renderGrid();
+      renderLegendCounts();
+    }
+  });
+
+  function goToQuestion(idx){
+    if(idx === current) return;
+    commitTimeSpent();
+    enterQuestion(idx);
+  }
+
+  // ---------------- grid / legend ----------------
+  function buildGrid(){
+    qGrid.innerHTML = '';
+    for(let i=0;i<N;i++){
+      const b = document.createElement('button');
+      b.className = 'qbtn st-not-visited';
+      b.textContent = (i+1);
+      b.dataset.idx = i;
+      b.addEventListener('click', function(){ goToQuestion(i); });
+      qGrid.appendChild(b);
+    }
+  }
+
+  function renderGrid(){
+    const btns = qGrid.children;
+    for(let i=0;i<N;i++){
+      const b = btns[i];
+      b.className = 'qbtn st-' + status[i] + (i === current ? ' current' : '');
+    }
+  }
+
+  function renderLegendCounts(){
+    let answeredC=0, notAnsweredC=0, notVisitedC=0, markedC=0, answeredMarkedC=0;
+    status.forEach(function(s){
+      if(s==='answered') answeredC++;
+      else if(s==='not-answered') notAnsweredC++;
+      else if(s==='not-visited') notVisitedC++;
+      else if(s==='marked') markedC++;
+      else if(s==='answered-marked') answeredMarkedC++;
+    });
+    cntAnswered.textContent = answeredC;
+    cntNotAnswered.textContent = notAnsweredC;
+    cntNotVisited.textContent = notVisitedC;
+    cntMarked.textContent = markedC;
+    cntAnsweredMarked.textContent = answeredMarkedC;
+  }
+
+  // ---------------- submit ----------------
+  submitBtn.addEventListener('click', function(){
+    if(confirm('Submit the test now? You will not be able to change answers after this.')){
+      finishTest(false);
+    }
+  });
+
+  function finishTest(auto){
+    if(submitted) return;
+    submitted = true;
+    commitTimeSpent();
+    clearInterval(timerInterval);
+    testScreen.classList.add('hidden');
+    resultScreen.classList.remove('hidden');
+    if(auto){
+      resultTitle.textContent = 'Time\u2019s Up — Test Auto-Submitted';
+      resultSub.textContent = 'Your responses were locked in automatically when the timer ended.';
+    } else {
+      resultTitle.textContent = 'Test Submitted';
+      resultSub.textContent = 'Here\u2019s your response sheet.';
+    }
+    renderResults(null);
+  }
+
+  // ---------------- results ----------------
+  function fmtDuration(ms){
+    const totalSec = Math.round(ms/1000);
+    const m = Math.floor(totalSec/60);
+    const s = totalSec%60;
+    if(m>0) return m+'m '+s+'s';
+    return s+'s';
+  }
+
+  function statusLabel(s){
+    switch(s){
+      case 'answered': return {cls:'tag-answered', text:'Answered'};
+      case 'not-answered': return {cls:'tag-not-answered', text:'Not Answered'};
+      case 'not-visited': return {cls:'tag-not-visited', text:'Not Visited'};
+      case 'marked': return {cls:'tag-marked', text:'Marked for Review'};
+      case 'answered-marked': return {cls:'tag-answered-marked', text:'Answered & Marked'};
+    }
+    return {cls:'tag-not-visited', text:s};
+  }
+
+  function renderResults(answerKey){
+    // stats
+    let answeredC=0, notAnsweredC=0, notVisitedC=0, markedC=0, answeredMarkedC=0;
+    let totalTimeMs=0;
+    status.forEach(function(s,i){
+      totalTimeMs += timeSpentMs[i];
+      if(s==='answered') answeredC++;
+      else if(s==='not-answered') notAnsweredC++;
+      else if(s==='not-visited') notVisitedC++;
+      else if(s==='marked') markedC++;
+      else if(s==='answered-marked') answeredMarkedC++;
+    });
+    const totalAttempted = answeredC + answeredMarkedC;
+
+    let statCards = [
+      {num: N, lbl:'Total Questions', acc:''},
+      {num: totalAttempted, lbl:'Attempted', acc:'acc-green'},
+      {num: notAnsweredC + notVisitedC, lbl:'Unattempted', acc:'acc-red'},
+      {num: markedC + answeredMarkedC, lbl:'Marked for Review', acc:'acc-purple'},
+      {num: fmtDuration(totalTimeMs), lbl:'Time Used', acc:'acc-blue'},
+      {num: fmtDuration(totalTimeMs / N), lbl:'Avg Time / Question', acc:'acc-blue'},
+    ];
+
+    let correctC=0, wrongC=0, score=null;
+    if(answerKey){
+      answers.forEach(function(a,i){
+        if(a === null) return;
+        if(a === answerKey[i]) correctC++;
+        else wrongC++;
+      });
+      score = (correctC*marksCorrect - wrongC*marksWrong);
+      statCards.push({num: correctC, lbl:'Correct', acc:'acc-green'});
+      statCards.push({num: wrongC, lbl:'Wrong', acc:'acc-red'});
+      statCards.push({num: score.toFixed(2), lbl:'Score', acc:'acc-blue'});
+    }
+
+    statGrid.innerHTML = statCards.map(function(c){
+      return '<div class="stat-card '+c.acc+'"><div class="num">'+c.num+'</div><div class="lbl">'+c.lbl+'</div></div>';
+    }).join('');
+
+    colResultHeader.textContent = answerKey ? 'Correct / Wrong' : 'Result';
+
+    let rows = '';
+    for(let i=0;i<N;i++){
+      const sl = statusLabel(status[i]);
+      let resultCell = '<span class="tag tag-unchecked">—</span>';
+      if(answerKey){
+        if(answers[i] === null){
+          resultCell = '<span class="tag tag-unchecked">Skipped</span>';
+        } else if(answers[i] === answerKey[i]){
+          resultCell = '<span class="tag tag-correct">Correct</span>';
+        } else {
+          resultCell = '<span class="tag tag-wrong">Wrong ('+answerKey[i]+')</span>';
+        }
+      }
+      rows += '<tr>'+
+        '<td>'+(i+1)+'</td>'+
+        '<td class="mono">'+ (answers[i] || '—') +'</td>'+
+        '<td><span class="tag '+sl.cls+'">'+sl.text+'</span></td>'+
+        '<td>'+fmtDuration(timeSpentMs[i])+'</td>'+
+        '<td>'+resultCell+'</td>'+
+        '</tr>';
+    }
+    resultTableBody.innerHTML = rows;
+  }
+
+  checkKeyBtn.addEventListener('click', function(){
+    const raw = keyInput.value.trim();
+    if(!raw){
+      keyErr.textContent = 'Paste an answer key first.';
+      keyErr.style.display = 'block';
+      return;
+    }
+    const tokens = raw.split(/[\s,;\n]+/).filter(Boolean).map(function(t){
+      return t.replace(/^\d+[\.\)\-:]?/,'').trim().toUpperCase();
+    });
+    if(tokens.length !== N){
+      keyErr.textContent = 'Expected '+N+' answers, found '+tokens.length+'. Check your list and try again.';
+      keyErr.style.display = 'block';
+      return;
+    }
+    const invalid = tokens.find(function(t){ return LETTERS.indexOf(t) === -1; });
+    if(invalid){
+      keyErr.textContent = 'Only letters A, B, C or D are allowed — found "'+invalid+'".';
+      keyErr.style.display = 'block';
+      return;
+    }
+    keyErr.style.display = 'none';
+    renderResults(tokens);
+  });
+
+  restartBtn.addEventListener('click', function(){
+    window.location.reload();
+  });
+
+  // warn on refresh/close mid-test
+  window.addEventListener('beforeunload', function(e){
+    if(!submitted && testScreen && !testScreen.classList.contains('hidden')){
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
