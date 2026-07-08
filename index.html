@@ -36,7 +36,6 @@
   button{font-family:inherit;}
   ::selection{background:#bcd6f5;}
 
-  /* ---------- utility ---------- */
   .hidden{display:none !important;}
   .screen{min-height:100vh;display:flex;flex-direction:column;}
 
@@ -110,6 +109,7 @@
     font-size:11.5px;
     color:var(--muted);
     margin-top:5px;
+    line-height:1.5;
   }
   .field input[type=number]{
     width:100%;
@@ -128,6 +128,74 @@
     background:#fff;
   }
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  .segmented{display:flex;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg-btn{
+    flex:1;
+    padding:9px;
+    border:none;
+    background:#fff;
+    color:var(--muted);
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    border-right:1px solid var(--line);
+  }
+  .seg-btn:last-child{border-right:none;}
+  .seg-btn.active{background:var(--blue);color:#fff;}
+
+  .prekey-list-wrap{
+    max-height:260px;
+    overflow-y:auto;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin:10px 0 18px;
+    padding:8px 10px;
+    background:#fafbfd;
+  }
+  .prekey-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:6px 2px;
+    border-bottom:1px solid #eef1f5;
+  }
+  .prekey-row:last-child{border-bottom:none;}
+  .prekey-row .qn{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--navy);
+    flex-shrink:0;
+    width:52px;
+  }
+  .prekey-opts{display:flex;gap:6px;}
+  .prekey-opt{
+    width:28px;height:28px;
+    border-radius:50%;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-size:11.5px;
+    font-weight:800;
+    color:var(--muted);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .1s;
+  }
+  .prekey-opt.selected{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+  .checkbox-field{display:flex;align-items:center;margin-bottom:18px;}
+  .checkbox-label{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+    line-height:1.4;
+  }
+  .checkbox-label input{width:16px;height:16px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
 
   details.advanced{
     margin-bottom:20px;
@@ -172,6 +240,7 @@
     margin-top:10px;
     display:none;
     font-weight:600;
+    line-height:1.5;
   }
   .foot-note{
     text-align:center;
@@ -245,6 +314,8 @@
     padding:12px 20px;
     border-bottom:1px solid var(--line);
     background:#f7f9fb;
+    flex-wrap:wrap;
+    gap:6px;
   }
   .qp-number{
     font-size:14px;
@@ -353,7 +424,6 @@
   .btn-primary:hover{background:var(--blue-light);}
   .btn:disabled{opacity:.4;cursor:not-allowed;}
 
-  /* palette sidebar */
   .side-panel{
     width:300px;
     flex-shrink:0;
@@ -419,7 +489,7 @@
     aspect-ratio:1;
     border-radius:7px;
     border:none;
-    font-size:12.5px;
+    font-size:12px;
     font-weight:800;
     color:#fff;
     cursor:pointer;
@@ -454,6 +524,94 @@
   }
   .submit-test-btn:hover{filter:brightness(1.08);}
 
+  /* ---------- GATE CALCULATOR ---------- */
+  .calc-fab{
+    position:fixed;
+    bottom:22px;right:22px;
+    width:50px;height:50px;
+    border-radius:50%;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 10px 24px -6px rgba(0,0,0,.45);
+    z-index:998;
+  }
+  .calc-fab:hover{background:#173a5e;}
+  .calc-fab svg{width:24px;height:24px;}
+
+  .calc-panel{
+    position:fixed;
+    bottom:84px;right:22px;
+    width:320px;
+    max-height:82vh;
+    overflow-y:auto;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:0 24px 48px -12px rgba(0,0,0,.5);
+    z-index:999;
+  }
+  @media (max-width:480px){ .calc-panel{width:92vw;right:4vw;bottom:78px;} }
+
+  .calc-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;
+    background:var(--navy);
+    color:#fff;
+    border-radius:14px 14px 0 0;
+    font-size:12px;font-weight:700;
+    letter-spacing:.03em;
+    position:sticky;top:0;
+  }
+  .calc-header .calc-close{
+    background:none;border:none;color:#fff;font-size:17px;cursor:pointer;line-height:1;padding:0 2px;
+  }
+  .calc-body{padding:12px;}
+  .calc-display{
+    background:#0f2942;
+    color:#eaf2fc;
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:10px;
+    text-align:right;
+  }
+  .calc-expr{font-size:10.5px;color:#7fa0c2;min-height:14px;word-break:break-all;}
+  .calc-current{font-size:19px;font-weight:700;font-family:var(--mono);word-break:break-all;}
+
+  .calc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:6px;}
+  .calc-grid button{
+    padding:7px 2px;
+    font-size:10px;
+    font-weight:700;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--navy);
+    cursor:pointer;
+  }
+  .calc-grid button:hover{background:#eef1f5;}
+  .calc-grid button.mode-active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .calc-grid button.calc-red{color:var(--red);}
+
+  .calc-numpad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
+  .calc-numpad button{
+    padding:10px 2px;
+    font-size:14px;
+    font-weight:700;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .calc-numpad button:hover{background:#f5f9ff;}
+  .calc-numpad button.op{background:#eaf2fc;color:var(--blue);}
+  .calc-numpad button.eq{background:var(--blue);color:#fff;}
+
+  .calc-note{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;text-align:center;}
+
   /* ---------- RESULT SCREEN ---------- */
   #result-screen{background:var(--paper);padding:28px 16px 60px;}
   .result-wrap{max-width:980px;margin:0 auto;}
@@ -486,6 +644,27 @@
   .stat-card.acc-purple .num{color:var(--purple);}
   .stat-card.acc-blue .num{color:var(--blue);}
 
+  .time-analysis-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 20px;
+    margin-bottom:22px;
+  }
+  .time-analysis-card h3{margin:0 0 4px;font-size:14.5px;color:var(--navy);}
+  .time-analysis-card p.sub{margin:0 0 14px;font-size:12.5px;color:var(--muted);}
+  .time-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px;}
+  .time-row .tq{width:52px;font-weight:700;color:var(--navy);flex-shrink:0;}
+  .tbar-track{flex:1;height:9px;border-radius:5px;background:#eef1f5;overflow:hidden;}
+  .tbar-track.mini{width:52px;height:6px;flex:none;}
+  .tbar-fill{height:100%;border-radius:5px;}
+  .tbar-fill.fast{background:var(--green);}
+  .tbar-fill.normal{background:var(--blue);}
+  .tbar-fill.slow{background:var(--red);}
+  .time-row .tval{width:66px;text-align:right;font-family:var(--mono);color:var(--muted);flex-shrink:0;}
+  .time-cell{display:flex;align-items:center;gap:8px;}
+  .time-empty{font-size:12.5px;color:var(--muted);}
+
   .score-key-card{
     background:var(--card);
     border:1px solid var(--line);
@@ -495,6 +674,13 @@
   }
   .score-key-card h3{margin:0 0 4px;font-size:14.5px;color:var(--navy);}
   .score-key-card p{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .score-key-card p.auto-note{
+    background:#eaf7ef;
+    color:var(--green-dark);
+    padding:9px 12px;
+    border-radius:8px;
+    font-weight:600;
+  }
   .key-input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .key-input-row textarea{
     flex:1;
@@ -605,6 +791,31 @@
         </div>
       </div>
 
+      <div class="field">
+        <label for="startNumber">Start numbering from</label>
+        <input type="number" id="startNumber" min="1" max="9999" value="1" inputmode="numeric">
+        <div class="hint" id="startNumberHint">Questions will be numbered 1 to 25 on screen.</div>
+      </div>
+
+      <div class="field">
+        <label>Provide correct answers now, for auto-scoring right after the test?</label>
+        <div class="segmented" id="preKeyToggle">
+          <button type="button" class="seg-btn active" data-val="no">No</button>
+          <button type="button" class="seg-btn" data-val="yes">Yes</button>
+        </div>
+        <div class="hint">If yes, mark the correct option for every question below. As soon as you submit the test, you'll see your score and a right/wrong breakdown automatically.</div>
+      </div>
+      <div id="preKeyListWrap" class="prekey-list-wrap hidden">
+        <div id="preKeyList"></div>
+      </div>
+
+      <div class="checkbox-field">
+        <label class="checkbox-label">
+          <input type="checkbox" id="wantsCalcInp">
+          I need a GATE-style scientific calculator available during the test
+        </label>
+      </div>
+
       <details class="advanced">
         <summary>Marking scheme (optional)</summary>
         <div class="advanced-body">
@@ -618,7 +829,7 @@
               <input type="number" id="marksWrong" min="0" step="0.25" value="0.5">
             </div>
           </div>
-          <div class="hint">Only used later if you choose to score your attempt against an answer key.</div>
+          <div class="hint">Used for scoring — either from the answer key above, or one you paste in after the test.</div>
         </div>
       </details>
 
@@ -673,6 +884,104 @@
       <button class="submit-test-btn" id="submitBtn">Submit Test</button>
     </div>
   </div>
+
+  <!-- GATE calculator floating button + panel (only shown if user opted in) -->
+  <button class="calc-fab hidden" id="calcFab" title="Open calculator" aria-label="Open calculator">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+      <line x1="8" y1="6" x2="16" y2="6"></line>
+      <line x1="8" y1="10" x2="8" y2="10"></line>
+      <line x1="12" y1="10" x2="12" y2="10"></line>
+      <line x1="16" y1="10" x2="16" y2="10"></line>
+      <line x1="8" y1="14" x2="8" y2="14"></line>
+      <line x1="12" y1="14" x2="12" y2="14"></line>
+      <line x1="16" y1="14" x2="16" y2="14"></line>
+      <line x1="8" y1="18" x2="8" y2="18"></line>
+      <line x1="12" y1="18" x2="12" y2="18"></line>
+      <line x1="16" y1="18" x2="16" y2="18"></line>
+    </svg>
+  </button>
+
+  <div class="calc-panel hidden" id="calcPanel">
+    <div class="calc-header">
+      <span>SCIENTIFIC CALCULATOR</span>
+      <button class="calc-close" id="calcCloseBtn" aria-label="Close calculator">&times;</button>
+    </div>
+    <div class="calc-body" id="calcBody">
+      <div class="calc-display">
+        <div class="calc-expr" id="calcExpr"></div>
+        <div class="calc-current" id="calcCurrent">0</div>
+      </div>
+
+      <div class="calc-grid">
+        <button id="calcModeBtn" data-mode-toggle>DEG</button>
+        <button data-mem="MC">MC</button>
+        <button data-mem="MR">MR</button>
+        <button data-mem="MS">MS</button>
+        <button data-clear class="calc-red">C</button>
+
+        <button data-mem="M+">M+</button>
+        <button data-mem="M-">M-</button>
+        <button data-ce>CE</button>
+        <button data-del>DEL</button>
+        <button data-op="mod" data-sym="mod">mod</button>
+
+        <button data-func="sin" data-sym="sin">sin</button>
+        <button data-func="cos" data-sym="cos">cos</button>
+        <button data-func="tan" data-sym="tan">tan</button>
+        <button data-const="pi">π</button>
+        <button data-const="e">e</button>
+
+        <button data-func="asin" data-sym="sin&#8315;&#185;">sin&#8315;&#185;</button>
+        <button data-func="acos" data-sym="cos&#8315;&#185;">cos&#8315;&#185;</button>
+        <button data-func="atan" data-sym="tan&#8315;&#185;">tan&#8315;&#185;</button>
+        <button data-exp>EXP</button>
+        <button data-paren="open">(</button>
+
+        <button data-func="sinh" data-sym="sinh">sinh</button>
+        <button data-func="cosh" data-sym="cosh">cosh</button>
+        <button data-func="tanh" data-sym="tanh">tanh</button>
+        <button data-op="^" data-sym="^">x^y</button>
+        <button data-paren="close">)</button>
+
+        <button data-func="asinh" data-sym="sinh&#8315;&#185;">sinh&#8315;&#185;</button>
+        <button data-func="acosh" data-sym="cosh&#8315;&#185;">cosh&#8315;&#185;</button>
+        <button data-func="atanh" data-sym="tanh&#8315;&#185;">tanh&#8315;&#185;</button>
+        <button data-func="sqrt" data-sym="&#8730;">&#8730;</button>
+        <button data-func="sq" data-sym="sq">x&#178;</button>
+
+        <button data-func="log" data-sym="log">log</button>
+        <button data-func="ln" data-sym="ln">ln</button>
+        <button data-func="fact" data-sym="fact">n!</button>
+        <button data-func="recip" data-sym="1/x">1/x</button>
+        <button data-sign>+/-</button>
+      </div>
+
+      <div class="calc-numpad">
+        <button data-digit="7">7</button>
+        <button data-digit="8">8</button>
+        <button data-digit="9">9</button>
+        <button class="op" data-op="/" data-sym="&#247;">&#247;</button>
+
+        <button data-digit="4">4</button>
+        <button data-digit="5">5</button>
+        <button data-digit="6">6</button>
+        <button class="op" data-op="*" data-sym="&#215;">&#215;</button>
+
+        <button data-digit="1">1</button>
+        <button data-digit="2">2</button>
+        <button data-digit="3">3</button>
+        <button class="op" data-op="-" data-sym="&#8722;">&#8722;</button>
+
+        <button data-digit="0">0</button>
+        <button data-dot>.</button>
+        <button class="eq" data-equals>=</button>
+        <button class="op" data-op="+" data-sym="+">+</button>
+      </div>
+
+      <div class="calc-note">Functions match the official GATE virtual calculator's keys and behaviour (enter value, then press the function). This is an independent recreation, not the official tool.</div>
+    </div>
+  </div>
 </div>
 
 <!-- ============ RESULT SCREEN ============ -->
@@ -685,9 +994,15 @@
 
     <div class="stat-grid" id="statGrid"></div>
 
+    <div class="time-analysis-card">
+      <h3>Where you spent the most time</h3>
+      <p class="sub">Your 5 slowest questions, so you know where to speed up next time.</p>
+      <div id="timeAnalysisList"></div>
+    </div>
+
     <div class="score-key-card">
-      <h3>Score against an answer key (optional)</h3>
-      <p>Paste your correct answers as letters in order, one per question — e.g. <span class="mono">A,C,B,D,A,...</span> or one per line. Only used in your browser, nothing is uploaded.</p>
+      <h3>Score against an answer key</h3>
+      <p id="keyNote">Paste your correct answers as letters in order, one per question — e.g. <span class="mono">A,C,B,D,A,...</span> or one per line. Only used in your browser, nothing is uploaded.</p>
       <div class="key-input-row">
         <textarea id="keyInput" placeholder="A,B,C,D,A,C,B,..."></textarea>
         <button id="checkKeyBtn">Check Score</button>
@@ -718,35 +1033,48 @@
 (function(){
   "use strict";
 
-  // ---------------- state ----------------
+  const LETTERS = ['A','B','C','D'];
+
+  // ---------------- state: test config ----------------
   let N = 0;
+  let startNumber = 1;
   let totalTimeSec = 0;
   let remainingSec = 0;
   let marksCorrect = 2;
   let marksWrong = 0.5;
+  let givePreKey = false;
+  let preKeyAnswers = [];       // built on home screen
+  let answerKeyPreset = null;   // locked in at Start Test
+  let wantsCalculator = false;
 
-  let answers = [];      // null | 'A'|'B'|'C'|'D'
-  let status  = [];      // 'not-visited' | 'not-answered' | 'answered' | 'marked' | 'answered-marked'
-  let timeSpentMs = [];  // per question accumulated
+  // ---------------- state: in-test ----------------
+  let answers = [];
+  let status  = [];
+  let timeSpentMs = [];
   let current = 0;
   let questionStartTs = null;
   let timerInterval = null;
   let submitted = false;
 
-  const LETTERS = ['A','B','C','D'];
-
-  // ---------------- elements ----------------
+  // ---------------- elements: home ----------------
   const homeScreen = document.getElementById('home-screen');
   const testScreen = document.getElementById('test-screen');
   const resultScreen = document.getElementById('result-screen');
 
   const numQuestionsInp = document.getElementById('numQuestions');
   const timeMinutesInp = document.getElementById('timeMinutes');
+  const startNumberInp = document.getElementById('startNumber');
+  const startNumberHint = document.getElementById('startNumberHint');
   const marksCorrectInp = document.getElementById('marksCorrect');
   const marksWrongInp = document.getElementById('marksWrong');
+  const wantsCalcInp = document.getElementById('wantsCalcInp');
   const startBtn = document.getElementById('startBtn');
   const homeErr = document.getElementById('homeErr');
+  const preKeyToggle = document.getElementById('preKeyToggle');
+  const preKeyListWrap = document.getElementById('preKeyListWrap');
+  const preKeyList = document.getElementById('preKeyList');
 
+  // ---------------- elements: test ----------------
   const timerNum = document.getElementById('timerNum');
   const timerWrap = document.getElementById('timerWrap');
   const qpNumber = document.getElementById('qpNumber');
@@ -766,20 +1094,102 @@
   const cntMarked = document.getElementById('cntMarked');
   const cntAnsweredMarked = document.getElementById('cntAnsweredMarked');
 
+  const calcFab = document.getElementById('calcFab');
+  const calcPanel = document.getElementById('calcPanel');
+  const calcCloseBtn = document.getElementById('calcCloseBtn');
+  const calcBody = document.getElementById('calcBody');
+  const calcExprEl = document.getElementById('calcExpr');
+  const calcCurrentEl = document.getElementById('calcCurrent');
+  const calcModeBtn = document.getElementById('calcModeBtn');
+
+  // ---------------- elements: results ----------------
   const statGrid = document.getElementById('statGrid');
+  const timeAnalysisList = document.getElementById('timeAnalysisList');
   const resultTableBody = document.getElementById('resultTableBody');
   const resultTitle = document.getElementById('resultTitle');
   const resultSub = document.getElementById('resultSub');
   const keyInput = document.getElementById('keyInput');
   const checkKeyBtn = document.getElementById('checkKeyBtn');
   const keyErr = document.getElementById('keyErr');
+  const keyNote = document.getElementById('keyNote');
   const colResultHeader = document.getElementById('colResultHeader');
   const restartBtn = document.getElementById('restartBtn');
 
-  // ---------------- home screen ----------------
+  // =========================================================
+  // HOME SCREEN
+  // =========================================================
+
+  function updateStartNumberHint(){
+    const n = parseInt(numQuestionsInp.value,10) || 0;
+    const start = parseInt(startNumberInp.value,10) || 1;
+    if(n > 0){
+      startNumberHint.textContent = 'Questions will be numbered ' + start + ' to ' + (start + n - 1) + ' on screen.';
+    }
+  }
+
+  function buildPreKeyList(){
+    const n = parseInt(numQuestionsInp.value,10) || 0;
+    const start = parseInt(startNumberInp.value,10) || 1;
+    if(preKeyAnswers.length !== n){
+      preKeyAnswers = new Array(n).fill(null);
+    }
+    preKeyList.innerHTML = '';
+    for(let i=0;i<n;i++){
+      const row = document.createElement('div');
+      row.className = 'prekey-row';
+
+      const qn = document.createElement('div');
+      qn.className = 'qn';
+      qn.textContent = 'Q' + (start + i);
+      row.appendChild(qn);
+
+      const opts = document.createElement('div');
+      opts.className = 'prekey-opts';
+      LETTERS.forEach(function(letter){
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'prekey-opt' + (preKeyAnswers[i] === letter ? ' selected' : '');
+        b.textContent = letter;
+        b.addEventListener('click', function(){
+          preKeyAnswers[i] = letter;
+          Array.from(opts.children).forEach(function(c){ c.classList.remove('selected'); });
+          b.classList.add('selected');
+        });
+        opts.appendChild(b);
+      });
+      row.appendChild(opts);
+      preKeyList.appendChild(row);
+    }
+  }
+
+  preKeyToggle.querySelectorAll('.seg-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      preKeyToggle.querySelectorAll('.seg-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      givePreKey = (btn.dataset.val === 'yes');
+      if(givePreKey){
+        buildPreKeyList();
+        preKeyListWrap.classList.remove('hidden');
+      } else {
+        preKeyListWrap.classList.add('hidden');
+      }
+    });
+  });
+
+  numQuestionsInp.addEventListener('input', function(){
+    updateStartNumberHint();
+    if(givePreKey) buildPreKeyList();
+  });
+  startNumberInp.addEventListener('input', function(){
+    updateStartNumberHint();
+    if(givePreKey) buildPreKeyList();
+  });
+  updateStartNumberHint();
+
   startBtn.addEventListener('click', function(){
     const n = parseInt(numQuestionsInp.value, 10);
     const mins = parseFloat(timeMinutesInp.value);
+    const start = parseInt(startNumberInp.value, 10);
     const mc = parseFloat(marksCorrectInp.value);
     const mw = parseFloat(marksWrongInp.value);
 
@@ -791,13 +1201,27 @@
       showHomeErr('Enter a time limit between 1 and 600 minutes.');
       return;
     }
+    if(!start || start < 1){
+      showHomeErr('Enter a valid starting question number (1 or greater).');
+      return;
+    }
+    if(givePreKey){
+      if(preKeyAnswers.length !== n || preKeyAnswers.some(function(a){ return a === null; })){
+        const missing = preKeyAnswers.length !== n ? n : preKeyAnswers.filter(function(a){ return a === null; }).length;
+        showHomeErr('Please mark the correct answer for every question above (' + missing + ' remaining) — or switch to "No" if you don\u2019t want auto-scoring.');
+        return;
+      }
+    }
     homeErr.style.display = 'none';
 
     N = n;
+    startNumber = start;
     totalTimeSec = Math.round(mins * 60);
     remainingSec = totalTimeSec;
     marksCorrect = isNaN(mc) ? 2 : mc;
     marksWrong = isNaN(mw) ? 0.5 : Math.abs(mw);
+    answerKeyPreset = givePreKey ? preKeyAnswers.slice() : null;
+    wantsCalculator = wantsCalcInp.checked;
 
     answers = new Array(N).fill(null);
     status = new Array(N).fill('not-visited');
@@ -809,6 +1233,9 @@
     mcNeg.textContent = '-' + marksWrong;
 
     buildGrid();
+    calcFab.classList.toggle('hidden', !wantsCalculator);
+    calcPanel.classList.add('hidden');
+
     homeScreen.classList.add('hidden');
     testScreen.classList.remove('hidden');
 
@@ -821,7 +1248,9 @@
     homeErr.style.display = 'block';
   }
 
-  // ---------------- timer ----------------
+  // =========================================================
+  // TIMER
+  // =========================================================
   function startTimer(){
     updateTimerDisplay();
     timerInterval = setInterval(function(){
@@ -841,13 +1270,15 @@
     const h = Math.floor(remainingSec/3600);
     const m = Math.floor((remainingSec%3600)/60);
     const s = remainingSec%60;
-    timerNum.textContent = [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+    timerNum.textContent = [h,m,s].map(function(v){ return String(v).padStart(2,'0'); }).join(':');
     if(remainingSec <= 60){
       timerWrap.classList.add('low');
     }
   }
 
-  // ---------------- question navigation ----------------
+  // =========================================================
+  // QUESTION NAVIGATION
+  // =========================================================
   function enterQuestion(idx){
     current = idx;
     if(status[idx] === 'not-visited'){
@@ -868,7 +1299,8 @@
   }
 
   function renderQuestion(){
-    qpNumber.textContent = 'Question No. ' + (current+1) + ' of ' + N;
+    const displayNum = startNumber + current;
+    qpNumber.textContent = 'Question No. ' + displayNum + '  (' + (current+1) + ' of ' + N + ')';
     optionsWrap.innerHTML = '';
     LETTERS.forEach(function(letter){
       const row = document.createElement('div');
@@ -909,7 +1341,7 @@
     if(current < N-1){
       enterQuestion(current+1);
     } else {
-      enterQuestion(current); // stay, recompute
+      enterQuestion(current);
     }
   });
 
@@ -941,13 +1373,15 @@
     enterQuestion(idx);
   }
 
-  // ---------------- grid / legend ----------------
+  // =========================================================
+  // GRID / LEGEND
+  // =========================================================
   function buildGrid(){
     qGrid.innerHTML = '';
     for(let i=0;i<N;i++){
       const b = document.createElement('button');
       b.className = 'qbtn st-not-visited';
-      b.textContent = (i+1);
+      b.textContent = (startNumber + i);
       b.dataset.idx = i;
       b.addEventListener('click', function(){ goToQuestion(i); });
       qGrid.appendChild(b);
@@ -978,7 +1412,9 @@
     cntAnsweredMarked.textContent = answeredMarkedC;
   }
 
-  // ---------------- submit ----------------
+  // =========================================================
+  // SUBMIT
+  // =========================================================
   submitBtn.addEventListener('click', function(){
     if(confirm('Submit the test now? You will not be able to change answers after this.')){
       finishTest(false);
@@ -999,10 +1435,12 @@
       resultTitle.textContent = 'Test Submitted';
       resultSub.textContent = 'Here\u2019s your response sheet.';
     }
-    renderResults(null);
+    renderResults(answerKeyPreset);
   }
 
-  // ---------------- results ----------------
+  // =========================================================
+  // RESULTS
+  // =========================================================
   function fmtDuration(ms){
     const totalSec = Math.round(ms/1000);
     const m = Math.floor(totalSec/60);
@@ -1022,12 +1460,20 @@
     return {cls:'tag-not-visited', text:s};
   }
 
+  function classifyTime(ms, avgMs){
+    if(avgMs <= 0) return 'normal';
+    const ratio = ms / avgMs;
+    if(ratio > 1.35) return 'slow';
+    if(ratio < 0.65) return 'fast';
+    return 'normal';
+  }
+
   function renderResults(answerKey){
-    // stats
     let answeredC=0, notAnsweredC=0, notVisitedC=0, markedC=0, answeredMarkedC=0;
-    let totalTimeMs=0;
+    let totalTimeMs=0, visitedCount=0;
     status.forEach(function(s,i){
       totalTimeMs += timeSpentMs[i];
+      if(s !== 'not-visited') visitedCount++;
       if(s==='answered') answeredC++;
       else if(s==='not-answered') notAnsweredC++;
       else if(s==='not-visited') notVisitedC++;
@@ -1035,6 +1481,8 @@
       else if(s==='answered-marked') answeredMarkedC++;
     });
     const totalAttempted = answeredC + answeredMarkedC;
+    const avgMs = totalTimeMs / Math.max(1, visitedCount);
+    const maxMs = Math.max(1, Math.max.apply(null, timeSpentMs));
 
     let statCards = [
       {num: N, lbl:'Total Questions', acc:''},
@@ -1062,12 +1510,42 @@
       return '<div class="stat-card '+c.acc+'"><div class="num">'+c.num+'</div><div class="lbl">'+c.lbl+'</div></div>';
     }).join('');
 
+    // --- time analysis: top 5 slowest ---
+    const timed = timeSpentMs.map(function(ms,i){ return {idx:i, ms:ms}; })
+      .filter(function(t){ return t.ms > 0; })
+      .sort(function(a,b){ return b.ms - a.ms; })
+      .slice(0,5);
+
+    if(timed.length === 0){
+      timeAnalysisList.innerHTML = '<div class="time-empty">No timing data yet — this fills in once you start moving between questions.</div>';
+    } else {
+      timeAnalysisList.innerHTML = timed.map(function(t){
+        const pct = Math.round((t.ms / maxMs) * 100);
+        const cls = classifyTime(t.ms, avgMs);
+        return '<div class="time-row">'+
+          '<div class="tq">Q'+(startNumber+t.idx)+'</div>'+
+          '<div class="tbar-track"><div class="tbar-fill '+cls+'" style="width:'+pct+'%"></div></div>'+
+          '<div class="tval">'+fmtDuration(t.ms)+'</div>'+
+          '</div>';
+      }).join('');
+    }
+
+    // --- score-key card note ---
+    if(answerKey){
+      keyNote.textContent = '';
+      keyNote.className = 'auto-note';
+      keyNote.textContent = '\u2713 Auto-scored using the answer key you entered before the test. Paste a different key below if you want to re-check against something else.';
+    } else {
+      keyNote.className = '';
+      keyNote.innerHTML = 'Paste your correct answers as letters in order, one per question — e.g. <span class="mono">A,C,B,D,A,...</span> or one per line. Only used in your browser, nothing is uploaded.';
+    }
+
     colResultHeader.textContent = answerKey ? 'Correct / Wrong' : 'Result';
 
     let rows = '';
     for(let i=0;i<N;i++){
       const sl = statusLabel(status[i]);
-      let resultCell = '<span class="tag tag-unchecked">—</span>';
+      let resultCell = '<span class="tag tag-unchecked">\u2014</span>';
       if(answerKey){
         if(answers[i] === null){
           resultCell = '<span class="tag tag-unchecked">Skipped</span>';
@@ -1077,11 +1555,15 @@
           resultCell = '<span class="tag tag-wrong">Wrong ('+answerKey[i]+')</span>';
         }
       }
+      const tCls = classifyTime(timeSpentMs[i], avgMs);
+      const tPct = Math.round((timeSpentMs[i] / maxMs) * 100);
+      const timeCell = '<div class="time-cell"><div class="tbar-track mini"><div class="tbar-fill '+tCls+'" style="width:'+tPct+'%"></div></div><span class="mono">'+fmtDuration(timeSpentMs[i])+'</span></div>';
+
       rows += '<tr>'+
-        '<td>'+(i+1)+'</td>'+
-        '<td class="mono">'+ (answers[i] || '—') +'</td>'+
+        '<td>'+(startNumber+i)+'</td>'+
+        '<td class="mono">'+ (answers[i] || '\u2014') +'</td>'+
         '<td><span class="tag '+sl.cls+'">'+sl.text+'</span></td>'+
-        '<td>'+fmtDuration(timeSpentMs[i])+'</td>'+
+        '<td>'+timeCell+'</td>'+
         '<td>'+resultCell+'</td>'+
         '</tr>';
     }
@@ -1117,13 +1599,239 @@
     window.location.reload();
   });
 
-  // warn on refresh/close mid-test
   window.addEventListener('beforeunload', function(e){
     if(!submitted && testScreen && !testScreen.classList.contains('hidden')){
       e.preventDefault();
       e.returnValue = '';
     }
   });
+
+  // =========================================================
+  // GATE-STYLE CALCULATOR
+  // =========================================================
+  let calcCurrent = '';
+  let calcAccumulator = null;
+  let calcPendingOp = null;
+  let calcExprHistory = '';
+  let calcJustEvaluated = false;
+  let calcAngleMode = 'DEG';
+  let calcMemory = 0;
+  let calcParenStack = [];
+
+  function calcFormat(n){
+    if(n === null || n === undefined || !isFinite(n)) return 'Error';
+    if(Math.abs(n) < 1e-12) n = 0;
+    let s;
+    if(Math.abs(n) >= 1e12 || (Math.abs(n) < 1e-9 && n !== 0)){
+      s = n.toExponential(6).replace(/\.?0+e/,'e');
+    } else {
+      s = parseFloat(n.toPrecision(12)).toString();
+    }
+    return s;
+  }
+
+  function calcCurrentValue(){
+    if(calcCurrent !== '') return parseFloat(calcCurrent);
+    if(calcAccumulator !== null) return calcAccumulator;
+    return 0;
+  }
+
+  function applyOp(a, op, b){
+    switch(op){
+      case '+': return a + b;
+      case '-': return a - b;
+      case '*': return a * b;
+      case '/': return b === 0 ? NaN : a / b;
+      case '^': return Math.pow(a, b);
+      case 'mod': return b === 0 ? NaN : a - b * Math.floor(a / b);
+      default: return b;
+    }
+  }
+
+  function applyFunc(name, x){
+    const toRad = function(v){ return calcAngleMode === 'DEG' ? v * Math.PI / 180 : v; };
+    const toDeg = function(v){ return calcAngleMode === 'DEG' ? v * 180 / Math.PI : v; };
+    switch(name){
+      case 'sin': return Math.sin(toRad(x));
+      case 'cos': return Math.cos(toRad(x));
+      case 'tan': return Math.tan(toRad(x));
+      case 'asin': return toDeg(Math.asin(x));
+      case 'acos': return toDeg(Math.acos(x));
+      case 'atan': return toDeg(Math.atan(x));
+      case 'sinh': return Math.sinh(x);
+      case 'cosh': return Math.cosh(x);
+      case 'tanh': return Math.tanh(x);
+      case 'asinh': return Math.asinh(x);
+      case 'acosh': return Math.acosh(x);
+      case 'atanh': return Math.atanh(x);
+      case 'log': return Math.log10(x);
+      case 'ln': return Math.log(x);
+      case 'sqrt': return Math.sqrt(x);
+      case 'sq': return x * x;
+      case 'recip': return 1 / x;
+      case 'fact':
+        if(x < 0 || !Number.isInteger(x) || x > 170) return NaN;
+        let r = 1;
+        for(let i=2;i<=x;i++) r *= i;
+        return r;
+      default: return x;
+    }
+  }
+
+  function updateCalcDisplay(){
+    calcExprEl.textContent = calcExprHistory;
+    calcCurrentEl.textContent = calcCurrent !== '' ? calcCurrent : (calcAccumulator !== null ? calcFormat(calcAccumulator) : '0');
+  }
+
+  function calcDigit(ch){
+    if(calcJustEvaluated){
+      calcCurrent = '';
+      calcJustEvaluated = false;
+    }
+    if(ch === '.' && calcCurrent.indexOf('.') !== -1) return;
+    if(ch === 'e' && calcCurrent.indexOf('e') !== -1) return;
+    if(ch === 'e' && calcCurrent === '') calcCurrent = '0';
+    calcCurrent += ch;
+    updateCalcDisplay();
+  }
+
+  function calcOperator(op, sym){
+    const val = calcCurrentValue();
+    if(calcPendingOp !== null && calcCurrent !== ''){
+      calcAccumulator = applyOp(calcAccumulator, calcPendingOp, val);
+    } else {
+      calcAccumulator = val;
+    }
+    calcExprHistory += calcFormat(calcAccumulator) + ' ' + sym + ' ';
+    calcPendingOp = op;
+    calcCurrent = '';
+    calcJustEvaluated = false;
+    updateCalcDisplay();
+  }
+
+  function calcFunction(name, sym){
+    const val = calcCurrentValue();
+    const result = applyFunc(name, val);
+    calcExprHistory += sym + '(' + calcFormat(val) + ') ';
+    calcCurrent = calcFormat(result);
+    calcJustEvaluated = false;
+    updateCalcDisplay();
+  }
+
+  function calcEquals(){
+    if(calcPendingOp !== null){
+      const val = calcCurrentValue();
+      calcAccumulator = applyOp(calcAccumulator, calcPendingOp, val);
+      calcExprHistory += calcFormat(val) + ' =';
+      calcCurrent = calcFormat(calcAccumulator);
+      calcAccumulator = null;
+      calcPendingOp = null;
+    }
+    calcJustEvaluated = true;
+    updateCalcDisplay();
+  }
+
+  function calcOpenParen(){
+    calcParenStack.push({acc: calcAccumulator, op: calcPendingOp, hist: calcExprHistory});
+    calcAccumulator = null;
+    calcPendingOp = null;
+    calcCurrent = '';
+    calcExprHistory += '(';
+    calcJustEvaluated = false;
+    updateCalcDisplay();
+  }
+
+  function calcCloseParen(){
+    if(calcParenStack.length === 0) return;
+    const val = calcCurrentValue();
+    const inner = calcPendingOp !== null ? applyOp(calcAccumulator, calcPendingOp, val) : val;
+    const frame = calcParenStack.pop();
+    calcExprHistory = frame.hist + calcFormat(inner) + ') ';
+    calcAccumulator = frame.acc;
+    calcPendingOp = frame.op;
+    calcCurrent = calcFormat(inner);
+    calcJustEvaluated = false;
+    updateCalcDisplay();
+  }
+
+  function calcMem(type){
+    const val = calcCurrentValue();
+    switch(type){
+      case 'MC': calcMemory = 0; break;
+      case 'MR': calcCurrent = calcFormat(calcMemory); calcJustEvaluated = false; break;
+      case 'MS': calcMemory = val; break;
+      case 'M+': calcMemory += val; break;
+      case 'M-': calcMemory -= val; break;
+    }
+    updateCalcDisplay();
+  }
+
+  function calcClearAll(){
+    calcCurrent = '';
+    calcAccumulator = null;
+    calcPendingOp = null;
+    calcExprHistory = '';
+    calcParenStack = [];
+    calcJustEvaluated = false;
+    updateCalcDisplay();
+  }
+
+  function calcClearEntry(){
+    calcCurrent = '';
+    updateCalcDisplay();
+  }
+
+  function calcDelChar(){
+    if(calcCurrent.length > 0) calcCurrent = calcCurrent.slice(0, -1);
+    updateCalcDisplay();
+  }
+
+  function calcToggleSign(){
+    if(calcCurrent !== ''){
+      calcCurrent = calcCurrent.charAt(0) === '-' ? calcCurrent.slice(1) : '-' + calcCurrent;
+    } else if(calcAccumulator !== null){
+      calcAccumulator = -calcAccumulator;
+    }
+    updateCalcDisplay();
+  }
+
+  function calcConstant(name){
+    if(calcJustEvaluated){ calcJustEvaluated = false; }
+    calcCurrent = calcFormat(name === 'pi' ? Math.PI : Math.E);
+    updateCalcDisplay();
+  }
+
+  calcBody.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const d = btn.dataset;
+    if(d.digit !== undefined) calcDigit(d.digit);
+    else if(d.dot !== undefined) calcDigit('.');
+    else if(d.exp !== undefined) calcDigit('e');
+    else if(d.op !== undefined) calcOperator(d.op, d.sym || d.op);
+    else if(d.func !== undefined) calcFunction(d.func, d.sym || btn.textContent);
+    else if(d.equals !== undefined) calcEquals();
+    else if(d.clear !== undefined) calcClearAll();
+    else if(d.ce !== undefined) calcClearEntry();
+    else if(d.del !== undefined) calcDelChar();
+    else if(d.sign !== undefined) calcToggleSign();
+    else if(d.mem !== undefined) calcMem(d.mem);
+    else if(d.const !== undefined) calcConstant(d.const);
+    else if(d.paren !== undefined){ d.paren === 'open' ? calcOpenParen() : calcCloseParen(); }
+    else if(d.modeToggle !== undefined){
+      calcAngleMode = calcAngleMode === 'DEG' ? 'RAD' : 'DEG';
+      calcModeBtn.textContent = calcAngleMode;
+    }
+  });
+
+  calcFab.addEventListener('click', function(){
+    calcPanel.classList.toggle('hidden');
+  });
+  calcCloseBtn.addEventListener('click', function(){
+    calcPanel.classList.add('hidden');
+  });
+
+  updateCalcDisplay();
 
 })();
 </script>
