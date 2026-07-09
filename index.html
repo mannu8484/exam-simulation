@@ -787,7 +787,7 @@
         </div>
         <div class="field">
           <label for="timeMinutes">Time limit (minutes)</label>
-          <input type="number" id="timeMinutes" min="1" max="600" value="60" inputmode="numeric">
+          <input type="number" id="timeMinutes" min="1" max="600" value="15" inputmode="numeric">
         </div>
       </div>
 
@@ -955,6 +955,16 @@
         <button data-func="fact" data-sym="fact">n!</button>
         <button data-func="recip" data-sym="1/x">1/x</button>
         <button data-sign>+/-</button>
+
+        <button data-func="log2" data-sym="log2(x)">log&#8322;x</button>
+        <button data-op="logy" data-sym="logy(x)" title="Enter base y, press this, enter x, then press =">log_y x</button>
+        <button data-func="expx" data-sym="e^x">e^x</button>
+        <button data-func="pow10" data-sym="10^x">10^x</button>
+        <button data-func="cube" data-sym="x^3">x&#179;</button>
+
+        <button data-func="cbrt" data-sym="cbrt(x)">&#8731;x</button>
+        <button data-func="percent" data-sym="%">%</button>
+        <button data-func="abs" data-sym="|x|">|x|</button>
       </div>
 
       <div class="calc-numpad">
@@ -1203,6 +1213,10 @@
     }
     if(!start || start < 1){
       showHomeErr('Enter a valid starting question number (1 or greater).');
+      return;
+    }
+    if(!isNaN(mc) && !isNaN(mw) && Math.abs(mw) > mc){
+      showHomeErr('Negative marking for a wrong answer cannot be more than the marks awarded for a correct answer.');
       return;
     }
     if(givePreKey){
@@ -1644,6 +1658,7 @@
       case '/': return b === 0 ? NaN : a / b;
       case '^': return Math.pow(a, b);
       case 'mod': return b === 0 ? NaN : a - b * Math.floor(a / b);
+      case 'logy': return (a <= 0 || a === 1 || b <= 0) ? NaN : Math.log(b) / Math.log(a);
       default: return b;
     }
   }
@@ -1669,6 +1684,13 @@
       case 'sqrt': return Math.sqrt(x);
       case 'sq': return x * x;
       case 'recip': return 1 / x;
+      case 'log2': return Math.log2(x);
+      case 'expx': return Math.exp(x);
+      case 'pow10': return Math.pow(10, x);
+      case 'cube': return x * x * x;
+      case 'cbrt': return Math.cbrt(x);
+      case 'percent': return x / 100;
+      case 'abs': return Math.abs(x);
       case 'fact':
         if(x < 0 || !Number.isInteger(x) || x > 170) return NaN;
         let r = 1;
