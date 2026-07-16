@@ -1,4 +1,4 @@
-<!-- hehe watch u doin here -->
+<!-- hehe watch u doin here :) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -613,6 +613,28 @@
 
   .calc-note{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;text-align:center;}
 
+  .confirm-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(15,41,66,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:16px;
+  }
+  .confirm-box{
+    background:var(--card);
+    border-radius:14px;
+    padding:22px 24px;
+    max-width:360px;
+    width:100%;
+    box-shadow:0 24px 48px -12px rgba(0,0,0,.5);
+  }
+  .confirm-box h3{margin:0 0 8px;font-size:16px;color:var(--navy);}
+  .confirm-box p{margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.5;}
+  .confirm-actions{display:flex;gap:10px;justify-content:flex-end;}
+
   /* ---------- RESULT SCREEN ---------- */
   #result-screen{background:var(--paper);padding:28px 16px 60px;}
   .result-wrap{max-width:980px;margin:0 auto;}
@@ -665,6 +687,62 @@
   .time-row .tval{width:66px;text-align:right;font-family:var(--mono);color:var(--muted);flex-shrink:0;}
   .time-cell{display:flex;align-items:center;gap:8px;}
   .time-empty{font-size:12.5px;color:var(--muted);}
+
+  .time-eff-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 20px;
+    margin-bottom:22px;
+  }
+  .time-eff-card h3{margin:0 0 4px;font-size:14.5px;color:var(--navy);}
+  .time-eff-card p.sub{margin:0 0 14px;font-size:12.5px;color:var(--muted);}
+  .time-eff-placeholder{font-size:12.5px;color:var(--muted);line-height:1.6;}
+
+  .time-eff-body{
+    display:flex;
+    gap:24px;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    margin-bottom:16px;
+  }
+  .pie-wrap{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-shrink:0;
+  }
+  .pie-chart{
+    width:120px;height:120px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+  .pie-legend{display:flex;flex-direction:column;gap:7px;}
+  .pie-legend-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink);}
+  .pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .pie-dot.pd-correct{background:var(--green-dark);}
+  .pie-dot.pd-wrong{background:var(--red);}
+  .pie-dot.pd-skipped{background:var(--gray);}
+  .pie-legend-row b{font-family:var(--mono);}
+
+  .pace-wrap{flex:1;min-width:220px;}
+  .pace-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;}
+  .pace-row .pace-label{width:92px;flex-shrink:0;color:var(--muted);font-weight:600;}
+  .pace-row .tbar-track{flex:1;height:9px;}
+  .pace-row .tval{width:60px;text-align:right;font-family:var(--mono);color:var(--muted);flex-shrink:0;}
+  .pace-verdict{font-size:12px;font-weight:600;margin-top:2px;}
+  .pace-verdict.pv-good{color:var(--green-dark);}
+  .pace-verdict.pv-bad{color:var(--red);}
+
+  .time-eff-summary{
+    font-size:12.5px;
+    color:var(--ink);
+    line-height:1.7;
+    background:#f7f9fb;
+    border-radius:8px;
+    padding:12px 14px;
+  }
+  .time-eff-summary strong{color:var(--navy);}
 
   .score-key-card{
     background:var(--card);
@@ -993,6 +1071,17 @@
       <div class="calc-note">Functions match the official GATE virtual calculator's keys and behaviour (enter value, then press the function). This is an independent recreation, not the official tool.</div>
     </div>
   </div>
+
+  <div class="confirm-overlay hidden" id="submitConfirmOverlay">
+    <div class="confirm-box">
+      <h3>Submit the test now?</h3>
+      <p>You will not be able to change your answers after this.</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-nav" id="submitConfirmCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submitConfirmOk">Submit Test</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ============ RESULT SCREEN ============ -->
@@ -1010,6 +1099,8 @@
       <p class="sub">Your 5 slowest questions, so you know where to speed up next time.</p>
       <div id="timeAnalysisList"></div>
     </div>
+
+    <div class="time-eff-card" id="timeEffCard"></div>
 
     <div class="score-key-card">
       <h3>Score against an answer key</h3>
@@ -1095,6 +1186,9 @@
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
   const submitBtn = document.getElementById('submitBtn');
+  const submitConfirmOverlay = document.getElementById('submitConfirmOverlay');
+  const submitConfirmCancel = document.getElementById('submitConfirmCancel');
+  const submitConfirmOk = document.getElementById('submitConfirmOk');
   const qGrid = document.getElementById('qGrid');
   const mcPos = document.getElementById('mcPos');
   const mcNeg = document.getElementById('mcNeg');
@@ -1116,6 +1210,7 @@
   // ---------------- elements: results ----------------
   const statGrid = document.getElementById('statGrid');
   const timeAnalysisList = document.getElementById('timeAnalysisList');
+  const timeEffCard = document.getElementById('timeEffCard');
   const resultTableBody = document.getElementById('resultTableBody');
   const resultTitle = document.getElementById('resultTitle');
   const resultSub = document.getElementById('resultSub');
@@ -1431,9 +1526,14 @@
   // SUBMIT
   // =========================================================
   submitBtn.addEventListener('click', function(){
-    if(confirm('Submit the test now? You will not be able to change answers after this.')){
-      finishTest(false);
-    }
+    submitConfirmOverlay.classList.remove('hidden');
+  });
+  submitConfirmCancel.addEventListener('click', function(){
+    submitConfirmOverlay.classList.add('hidden');
+  });
+  submitConfirmOk.addEventListener('click', function(){
+    submitConfirmOverlay.classList.add('hidden');
+    finishTest(false);
   });
 
   function finishTest(auto){
@@ -1509,16 +1609,25 @@
     ];
 
     let correctC=0, wrongC=0, score=null;
+    let correctTimeMs=0, wrongTimeMs=0, skippedTimeMs=0;
     if(answerKey){
       answers.forEach(function(a,i){
-        if(a === null) return;
-        if(a === answerKey[i]) correctC++;
-        else wrongC++;
+        if(a === null){
+          skippedTimeMs += timeSpentMs[i];
+          return;
+        }
+        if(a === answerKey[i]){ correctC++; correctTimeMs += timeSpentMs[i]; }
+        else { wrongC++; wrongTimeMs += timeSpentMs[i]; }
       });
       score = (correctC*marksCorrect - wrongC*marksWrong);
+      const wastedTimeMs = wrongTimeMs + skippedTimeMs;
+      const scoringTimeMs = correctTimeMs + wrongTimeMs + skippedTimeMs;
+      const efficiencyPct = scoringTimeMs > 0 ? Math.round((correctTimeMs / scoringTimeMs) * 100) : 0;
       statCards.push({num: correctC, lbl:'Correct', acc:'acc-green'});
       statCards.push({num: wrongC, lbl:'Wrong', acc:'acc-red'});
       statCards.push({num: score.toFixed(2), lbl:'Score', acc:'acc-blue'});
+      statCards.push({num: efficiencyPct + '%', lbl:'Efficiency', acc: efficiencyPct >= 50 ? 'acc-green' : 'acc-red'});
+      statCards.push({num: fmtDuration(wastedTimeMs), lbl:'Time Wasted', acc:'acc-red'});
     }
 
     statGrid.innerHTML = statCards.map(function(c){
@@ -1545,6 +1654,8 @@
       }).join('');
     }
 
+    renderTimeEfficiency(answerKey, correctTimeMs, wrongTimeMs, skippedTimeMs, correctC, wrongC, score, avgMs);
+
     // --- score-key card note ---
     if(answerKey){
       keyNote.textContent = '';
@@ -1563,7 +1674,7 @@
       let resultCell = '<span class="tag tag-unchecked">\u2014</span>';
       if(answerKey){
         if(answers[i] === null){
-          resultCell = '<span class="tag tag-unchecked">Skipped</span>';
+          resultCell = '<span class="tag tag-unchecked">Skipped (' + answerKey[i] + ')</span>';
         } else if(answers[i] === answerKey[i]){
           resultCell = '<span class="tag tag-correct">Correct</span>';
         } else {
@@ -1583,6 +1694,91 @@
         '</tr>';
     }
     resultTableBody.innerHTML = rows;
+  }
+
+  function renderTimeEfficiency(answerKey, correctTimeMs, wrongTimeMs, skippedTimeMs, correctC, wrongC, score, avgMs){
+    if(!answerKey){
+      timeEffCard.innerHTML =
+        '<h3>Time vs. Scoring</h3>' +
+        '<div class="time-eff-placeholder">Provide an answer key (before the test, or paste one above) to unlock efficiency, wasted-time, and pacing analysis here.</div>';
+      return;
+    }
+
+    const scoringTimeMs = correctTimeMs + wrongTimeMs + skippedTimeMs;
+    const efficiencyPct = scoringTimeMs > 0 ? Math.round((correctTimeMs / scoringTimeMs) * 100) : 0;
+    const wrongPct = scoringTimeMs > 0 ? Math.round((wrongTimeMs / scoringTimeMs) * 100) : 0;
+    const skippedPct = Math.max(0, 100 - efficiencyPct - wrongPct);
+    const wastedTimeMs = wrongTimeMs + skippedTimeMs;
+
+    // --- pie chart (pure CSS conic-gradient, no chart library needed) ---
+    const correctEnd = efficiencyPct;
+    const wrongEnd = correctEnd + wrongPct;
+    const pieStyle = 'background: conic-gradient(var(--green-dark) 0% ' + correctEnd + '%, var(--red) ' + correctEnd + '% ' + wrongEnd + '%, var(--gray) ' + wrongEnd + '% 100%);';
+
+    // --- pacing: allotted time/question vs actual average ---
+    const idealMsPerQ = (totalTimeSec * 1000) / Math.max(1, N);
+    const paceMax = Math.max(idealMsPerQ, avgMs, 1);
+    const idealPct = Math.round((idealMsPerQ / paceMax) * 100);
+    const actualPct = Math.round((avgMs / paceMax) * 100);
+    const paceDiffMs = idealMsPerQ - avgMs; // positive = faster than planned
+    const paceGood = paceDiffMs >= 0;
+    const paceVerdict = paceGood
+      ? '\u2713 On average you moved ' + fmtDuration(Math.abs(paceDiffMs)) + ' faster per question than your allotted pace.'
+      : '\u26A0 On average you spent ' + fmtDuration(Math.abs(paceDiffMs)) + ' longer per question than your allotted pace.';
+
+    // --- find the single costliest question that earned no marks ---
+    let worstIdx = -1, worstMs = 0;
+    for(let i=0;i<N;i++){
+      const isNonScoring = (answers[i] === null) || (answers[i] !== answerKey[i]);
+      if(isNonScoring && timeSpentMs[i] > worstMs){
+        worstMs = timeSpentMs[i];
+        worstIdx = i;
+      }
+    }
+
+    // --- 4-5 line plain-language summary ---
+    const lines = [];
+    lines.push('You spent <strong>' + efficiencyPct + '%</strong> of your time on questions you answered correctly, and <strong>' + (100 - efficiencyPct) + '%</strong> (' + fmtDuration(wastedTimeMs) + ') on questions that were wrong or left unattempted.');
+    lines.push('Your average pace was <strong>' + fmtDuration(avgMs) + '</strong> per question, against an allotted <strong>' + fmtDuration(idealMsPerQ) + '</strong> per question \u2014 ' + (paceGood ? 'faster' : 'slower') + ' than planned.');
+    lines.push('That contributed to a score of <strong>' + score.toFixed(2) + '</strong>, from ' + correctC + ' correct and ' + wrongC + ' wrong answers out of ' + N + '.');
+    if(worstIdx !== -1 && worstMs > 0){
+      lines.push('Q' + (startNumber + worstIdx) + ' alone cost you <strong>' + fmtDuration(worstMs) + '</strong> without earning marks \u2014 worth a second look next time.');
+    }
+    if(efficiencyPct >= 70){
+      lines.push('Strong time discipline overall \u2014 most of your time went where it actually counted.');
+    } else if(efficiencyPct >= 40){
+      lines.push('Decent, but there\u2019s room to tighten up \u2014 try skipping tough questions sooner next time.');
+    } else {
+      lines.push('A large share of your time went to questions that didn\u2019t pay off \u2014 consider a stricter skip-and-move-on strategy.');
+    }
+
+    timeEffCard.innerHTML =
+      '<h3>Time vs. Scoring</h3>' +
+      '<p class="sub">How your time broke down between what earned marks and what didn\u2019t.</p>' +
+      '<div class="time-eff-body">' +
+        '<div class="pie-wrap">' +
+          '<div class="pie-chart" style="' + pieStyle + '"></div>' +
+          '<div class="pie-legend">' +
+            '<div class="pie-legend-row"><span class="pie-dot pd-correct"></span>Scored <b>' + fmtDuration(correctTimeMs) + '</b> (' + efficiencyPct + '%)</div>' +
+            '<div class="pie-legend-row"><span class="pie-dot pd-wrong"></span>Wrong <b>' + fmtDuration(wrongTimeMs) + '</b> (' + wrongPct + '%)</div>' +
+            '<div class="pie-legend-row"><span class="pie-dot pd-skipped"></span>Skipped <b>' + fmtDuration(skippedTimeMs) + '</b> (' + skippedPct + '%)</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pace-wrap">' +
+          '<div class="pace-row">' +
+            '<div class="pace-label">Allotted</div>' +
+            '<div class="tbar-track"><div class="tbar-fill normal" style="width:' + idealPct + '%"></div></div>' +
+            '<div class="tval">' + fmtDuration(idealMsPerQ) + '</div>' +
+          '</div>' +
+          '<div class="pace-row">' +
+            '<div class="pace-label">Your actual</div>' +
+            '<div class="tbar-track"><div class="tbar-fill ' + (paceGood ? 'fast' : 'slow') + '" style="width:' + actualPct + '%"></div></div>' +
+            '<div class="tval">' + fmtDuration(avgMs) + '</div>' +
+          '</div>' +
+          '<div class="pace-verdict ' + (paceGood ? 'pv-good' : 'pv-bad') + '">' + paceVerdict + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="time-eff-summary">' + lines.map(function(l){ return '<div>' + l + '</div>'; }).join('') + '</div>';
   }
 
   checkKeyBtn.addEventListener('click', function(){
