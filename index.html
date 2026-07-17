@@ -144,6 +144,7 @@
   }
   .seg-btn:last-child{border-right:none;}
   .seg-btn.active{background:var(--blue);color:#fff;}
+  .seg-btn.disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
 
   .prekey-list-wrap{
     max-height:260px;
@@ -163,14 +164,16 @@
     border-bottom:1px solid #eef1f5;
   }
   .prekey-row:last-child{border-bottom:none;}
+  .prekey-row.prekey-row-typed{align-items:flex-start;padding-top:8px;padding-bottom:8px;}
   .prekey-row .qn{
     font-size:12.5px;
     font-weight:700;
     color:var(--navy);
     flex-shrink:0;
     width:52px;
+    padding-top:5px;
   }
-  .prekey-opts{display:flex;gap:6px;}
+  .prekey-opts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
   .prekey-opt{
     width:28px;height:28px;
     border-radius:50%;
@@ -185,6 +188,32 @@
   }
   .prekey-opt.selected{background:var(--blue);border-color:var(--blue);color:#fff;}
 
+  .prekey-body{flex:1;display:flex;flex-direction:column;gap:7px;align-items:flex-end;}
+  .prekey-type-toggle{display:flex;gap:4px;}
+  .prekey-type-btn{
+    padding:3px 8px;
+    font-size:9.5px;
+    font-weight:800;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:#fff;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .prekey-type-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .prekey-nat-wrap{display:flex;align-items:center;gap:6px;}
+  .prekey-nat-input{
+    width:66px;
+    padding:5px 7px;
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    font-size:12px;
+    font-family:var(--mono);
+    text-align:center;
+  }
+  .prekey-nat-to{font-size:11px;color:var(--muted);}
+  .prekey-msq-hint{font-size:10px;color:var(--muted);text-align:right;}
+
   .checkbox-field{display:flex;align-items:center;margin-bottom:18px;}
   .checkbox-label{
     display:flex;
@@ -197,6 +226,17 @@
     line-height:1.4;
   }
   .checkbox-label input{width:16px;height:16px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
+
+  .forced-note{
+    color:var(--red);
+    font-size:12px;
+    font-weight:700;
+    margin-top:8px;
+    line-height:1.5;
+    background:#fbeceb;
+    padding:9px 11px;
+    border-radius:8px;
+  }
 
   details.advanced{
     margin-bottom:20px;
@@ -391,6 +431,47 @@
     color:#fff;
   }
   .option-text{font-size:13.5px;color:var(--muted);}
+
+  .msq-hint{
+    font-size:11.5px;
+    color:var(--muted);
+    font-style:italic;
+    margin-bottom:12px;
+  }
+
+  .qtype-badge{
+    display:inline-block;
+    font-size:9.5px;
+    font-weight:800;
+    padding:2px 7px;
+    border-radius:8px;
+    margin-left:8px;
+    color:#fff;
+    vertical-align:middle;
+    letter-spacing:.03em;
+  }
+  .qtb-msq{background:var(--purple);}
+  .qtb-nat{background:var(--amber);}
+
+  .nat-input-wrap{max-width:280px;}
+  .nat-input-label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+  .nat-input-box{
+    width:100%;
+    padding:13px 16px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    font-size:16px;
+    font-family:var(--mono);
+    color:var(--ink);
+    background:#fbfcfe;
+  }
+  .nat-input-box:focus{
+    outline:none;
+    border-color:var(--focus);
+    box-shadow:0 0 0 3px rgba(47,123,209,.15);
+    background:#fff;
+  }
+  .nat-input-hint{font-size:11.5px;color:var(--muted);margin-top:8px;}
 
   .qp-actions{
     display:flex;
@@ -877,6 +958,16 @@
       </div>
 
       <div class="field">
+        <label>Does this question set include any Numerical Answer Type (NAT) or Multiple Select Questions (MSQs)?</label>
+        <div class="segmented" id="natMsqToggle">
+          <button type="button" class="seg-btn active" data-val="no">No</button>
+          <button type="button" class="seg-btn" data-val="yes">Yes</button>
+        </div>
+        <div class="hint">NAT questions expect a numeric answer (a range is fine, e.g. 12.677 to 13.0 — or 12 to 12 for an exact value). MSQ questions can have more than one correct option, and are marked correct only if every right option is picked and no wrong one is — no partial marking.</div>
+        <div class="forced-note hidden" id="natMsqWarning">Numerical Answer Type (NAT) or Multiple Select Questions (MSQs) included, so you must pre-seed the answer to every question (even MCQs) before proceeding to the test.</div>
+      </div>
+
+      <div class="field">
         <label>Provide correct answers now, for auto-scoring right after the test?</label>
         <div class="segmented" id="preKeyToggle">
           <button type="button" class="seg-btn active" data-val="no">No</button>
@@ -904,11 +995,11 @@
               <input type="number" id="marksCorrect" min="0" step="0.25" value="2">
             </div>
             <div class="field" style="margin-bottom:0;">
-              <label for="marksWrong">Negative for wrong</label>
+              <label for="marksWrong">Negative for wrong (MCQ only)</label>
               <input type="number" id="marksWrong" min="0" step="0.25" value="0.5">
             </div>
           </div>
-          <div class="hint">Used for scoring — either from the answer key above, or one you paste in after the test.</div>
+          <div class="hint">Used for scoring — either from the answer key above, or one you paste in after the test. NAT and MSQ questions are never negatively marked, regardless of this setting.</div>
         </div>
       </details>
 
@@ -1102,7 +1193,7 @@
 
     <div class="time-eff-card" id="timeEffCard"></div>
 
-    <div class="score-key-card">
+    <div class="score-key-card" id="scoreKeyCard">
       <h3>Score against an answer key</h3>
       <p id="keyNote">Paste your correct answers as letters in order, one per question — e.g. <span class="mono">A,C,B,D,A,...</span> or one per line. Only used in your browser, nothing is uploaded.</p>
       <div class="key-input-row">
@@ -1135,7 +1226,7 @@
 (function(){
   "use strict";
 
-  const LETTERS = ['A','B','C','D'];
+  const LETTERS = ['A','B','C','D','E'];
 
   // ---------------- state: test config ----------------
   let N = 0;
@@ -1145,11 +1236,14 @@
   let marksCorrect = 2;
   let marksWrong = 0.5;
   let givePreKey = false;
-  let preKeyAnswers = [];       // built on home screen
-  let answerKeyPreset = null;   // locked in at Start Test
+  let natMsqEnabled = false;
+  let preKeyAnswers = [];       // built on home screen; shape depends on preKeyTypes[i]
+  let preKeyTypes = [];         // 'mcq' | 'msq' | 'nat', per question, built on home screen
+  let answerKeyPreset = null;   // locked in at Start Test (mirrors preKeyAnswers, finalized)
   let wantsCalculator = false;
 
   // ---------------- state: in-test ----------------
+  let qTypes = [];              // locked-in per-question type for the running test
   let answers = [];
   let status  = [];
   let timeSpentMs = [];
@@ -1172,6 +1266,8 @@
   const wantsCalcInp = document.getElementById('wantsCalcInp');
   const startBtn = document.getElementById('startBtn');
   const homeErr = document.getElementById('homeErr');
+  const natMsqToggle = document.getElementById('natMsqToggle');
+  const natMsqWarning = document.getElementById('natMsqWarning');
   const preKeyToggle = document.getElementById('preKeyToggle');
   const preKeyListWrap = document.getElementById('preKeyListWrap');
   const preKeyList = document.getElementById('preKeyList');
@@ -1211,6 +1307,7 @@
   const statGrid = document.getElementById('statGrid');
   const timeAnalysisList = document.getElementById('timeAnalysisList');
   const timeEffCard = document.getElementById('timeEffCard');
+  const scoreKeyCard = document.getElementById('scoreKeyCard');
   const resultTableBody = document.getElementById('resultTableBody');
   const resultTitle = document.getElementById('resultTitle');
   const resultSub = document.getElementById('resultSub');
@@ -1239,7 +1336,11 @@
     if(preKeyAnswers.length !== n){
       preKeyAnswers = new Array(n).fill(null);
     }
+    if(preKeyTypes.length !== n){
+      preKeyTypes = new Array(n).fill('mcq');
+    }
     preKeyList.innerHTML = '';
+
     for(let i=0;i<n;i++){
       const row = document.createElement('div');
       row.className = 'prekey-row';
@@ -1249,24 +1350,159 @@
       qn.textContent = 'Q' + (start + i);
       row.appendChild(qn);
 
-      const opts = document.createElement('div');
-      opts.className = 'prekey-opts';
-      LETTERS.forEach(function(letter){
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'prekey-opt' + (preKeyAnswers[i] === letter ? ' selected' : '');
-        b.textContent = letter;
-        b.addEventListener('click', function(){
-          preKeyAnswers[i] = letter;
-          Array.from(opts.children).forEach(function(c){ c.classList.remove('selected'); });
-          b.classList.add('selected');
+      if(!natMsqEnabled){
+        // ORIGINAL simple rendering path — byte-identical to the pre-NAT/MSQ behaviour
+        const opts = document.createElement('div');
+        opts.className = 'prekey-opts';
+        LETTERS.forEach(function(letter){
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'prekey-opt' + (preKeyAnswers[i] === letter ? ' selected' : '');
+          b.textContent = letter;
+          b.addEventListener('click', function(){
+            preKeyAnswers[i] = letter;
+            Array.from(opts.children).forEach(function(c){ c.classList.remove('selected'); });
+            b.classList.add('selected');
+          });
+          opts.appendChild(b);
         });
-        opts.appendChild(b);
-      });
-      row.appendChild(opts);
+        row.appendChild(opts);
+      } else {
+        // Extended rendering path: per-question type selector + type-specific input
+        row.classList.add('prekey-row-typed');
+        const bodyWrap = document.createElement('div');
+        bodyWrap.className = 'prekey-body';
+
+        const typeRow = document.createElement('div');
+        typeRow.className = 'prekey-type-toggle';
+        ['mcq','msq','nat'].forEach(function(t){
+          const tb = document.createElement('button');
+          tb.type = 'button';
+          tb.className = 'prekey-type-btn' + (preKeyTypes[i]===t ? ' active' : '');
+          tb.textContent = t.toUpperCase();
+          tb.addEventListener('click', function(){
+            if(preKeyTypes[i] !== t){
+              preKeyTypes[i] = t;
+              preKeyAnswers[i] = null;
+              buildPreKeyList();
+            }
+          });
+          typeRow.appendChild(tb);
+        });
+        bodyWrap.appendChild(typeRow);
+
+        const type = preKeyTypes[i];
+        if(type === 'nat'){
+          const natWrap = document.createElement('div');
+          natWrap.className = 'prekey-nat-wrap';
+          const minInput = document.createElement('input');
+          minInput.type = 'text';
+          minInput.setAttribute('inputmode','decimal');
+          minInput.placeholder = 'Min';
+          minInput.className = 'prekey-nat-input';
+          const toLabel = document.createElement('span');
+          toLabel.className = 'prekey-nat-to';
+          toLabel.textContent = 'to';
+          const maxInput = document.createElement('input');
+          maxInput.type = 'text';
+          maxInput.setAttribute('inputmode','decimal');
+          maxInput.placeholder = 'Max';
+          maxInput.className = 'prekey-nat-input';
+
+          const existing = preKeyAnswers[i];
+          if(existing && typeof existing === 'object'){
+            minInput.value = existing.minRaw !== undefined ? existing.minRaw : '';
+            maxInput.value = existing.maxRaw !== undefined ? existing.maxRaw : '';
+          }
+          function updateNat(){
+            preKeyAnswers[i] = { minRaw: minInput.value, maxRaw: maxInput.value };
+          }
+          minInput.addEventListener('input', updateNat);
+          maxInput.addEventListener('input', updateNat);
+
+          natWrap.appendChild(minInput);
+          natWrap.appendChild(toLabel);
+          natWrap.appendChild(maxInput);
+          bodyWrap.appendChild(natWrap);
+
+          const natHint = document.createElement('div');
+          natHint.className = 'prekey-msq-hint';
+          natHint.textContent = 'exact value? use same in both';
+          bodyWrap.appendChild(natHint);
+        } else {
+          const opts = document.createElement('div');
+          opts.className = 'prekey-opts';
+          LETTERS.forEach(function(letter){
+            const b = document.createElement('button');
+            b.type = 'button';
+            let isSel;
+            if(type === 'msq'){
+              isSel = Array.isArray(preKeyAnswers[i]) && preKeyAnswers[i].indexOf(letter) !== -1;
+            } else {
+              isSel = preKeyAnswers[i] === letter;
+            }
+            b.className = 'prekey-opt' + (isSel ? ' selected' : '');
+            b.textContent = letter;
+            b.addEventListener('click', function(){
+              if(type === 'msq'){
+                let arr = Array.isArray(preKeyAnswers[i]) ? preKeyAnswers[i].slice() : [];
+                const idx = arr.indexOf(letter);
+                if(idx === -1) arr.push(letter); else arr.splice(idx,1);
+                preKeyAnswers[i] = arr.length ? arr : null;
+              } else {
+                preKeyAnswers[i] = letter;
+              }
+              buildPreKeyList();
+            });
+            opts.appendChild(b);
+          });
+          bodyWrap.appendChild(opts);
+          if(type === 'msq'){
+            const msqHint = document.createElement('div');
+            msqHint.className = 'prekey-msq-hint';
+            msqHint.textContent = 'select all correct options';
+            bodyWrap.appendChild(msqHint);
+          }
+        }
+
+        row.appendChild(bodyWrap);
+      }
+
       preKeyList.appendChild(row);
     }
   }
+
+  natMsqToggle.querySelectorAll('.seg-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      natMsqToggle.querySelectorAll('.seg-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      natMsqEnabled = (btn.dataset.val === 'yes');
+
+      const noBtn = preKeyToggle.querySelector('[data-val="no"]');
+      const yesBtnEl = preKeyToggle.querySelector('[data-val="yes"]');
+
+      if(natMsqEnabled){
+        natMsqWarning.classList.remove('hidden');
+        noBtn.classList.add('disabled');
+        if(!givePreKey){
+          yesBtnEl.click();
+        }
+      } else {
+        natMsqWarning.classList.add('hidden');
+        noBtn.classList.remove('disabled');
+        // reset any per-question types back to plain MCQ to avoid stale mismatched data
+        for(let i=0;i<preKeyTypes.length;i++){
+          if(preKeyTypes[i] !== 'mcq'){
+            preKeyTypes[i] = 'mcq';
+            preKeyAnswers[i] = null;
+          }
+        }
+      }
+      if(givePreKey){
+        buildPreKeyList();
+      }
+    });
+  });
 
   preKeyToggle.querySelectorAll('.seg-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -1315,10 +1551,30 @@
       showHomeErr('Negative marking for a wrong answer cannot be more than the marks awarded for a correct answer.');
       return;
     }
+    if(natMsqEnabled && !givePreKey){
+      showHomeErr('Since this set includes NAT/MSQ questions, please pre-seed all answers above before starting.');
+      return;
+    }
     if(givePreKey){
-      if(preKeyAnswers.length !== n || preKeyAnswers.some(function(a){ return a === null; })){
-        const missing = preKeyAnswers.length !== n ? n : preKeyAnswers.filter(function(a){ return a === null; }).length;
-        showHomeErr('Please mark the correct answer for every question above (' + missing + ' remaining) — or switch to "No" if you don\u2019t want auto-scoring.');
+      if(preKeyTypes.length !== n){
+        preKeyTypes = new Array(n).fill('mcq');
+      }
+      let missingCount = 0;
+      for(let i=0;i<n;i++){
+        const t = preKeyTypes[i];
+        const a = preKeyAnswers[i];
+        if(t === 'nat'){
+          if(!a || isNaN(parseFloat(a.minRaw)) || isNaN(parseFloat(a.maxRaw)) || parseFloat(a.minRaw) > parseFloat(a.maxRaw)){
+            missingCount++;
+          }
+        } else if(t === 'msq'){
+          if(!Array.isArray(a) || a.length === 0) missingCount++;
+        } else {
+          if(a === null) missingCount++;
+        }
+      }
+      if(missingCount > 0){
+        showHomeErr('Please complete the correct answer for every question above (' + missingCount + ' remaining)' + (natMsqEnabled ? '.' : ' — or switch to "No" if you don\u2019t want auto-scoring.'));
         return;
       }
     }
@@ -1330,7 +1586,20 @@
     remainingSec = totalTimeSec;
     marksCorrect = isNaN(mc) ? 2 : mc;
     marksWrong = isNaN(mw) ? 0.5 : Math.abs(mw);
-    answerKeyPreset = givePreKey ? preKeyAnswers.slice() : null;
+
+    qTypes = (preKeyTypes.length === N) ? preKeyTypes.slice() : new Array(N).fill('mcq');
+
+    answerKeyPreset = givePreKey ? preKeyAnswers.map(function(a,i){
+      const t = qTypes[i];
+      if(t === 'nat'){
+        return { min: parseFloat(a.minRaw), max: parseFloat(a.maxRaw) };
+      }
+      if(t === 'msq'){
+        return a.slice();
+      }
+      return a;
+    }) : null;
+
     wantsCalculator = wantsCalcInp.checked;
 
     answers = new Array(N).fill(null);
@@ -1410,28 +1679,89 @@
 
   function renderQuestion(){
     const displayNum = startNumber + current;
-    qpNumber.textContent = 'Question No. ' + displayNum + '  (' + (current+1) + ' of ' + N + ')';
+    const type = qTypes[current] || 'mcq';
+    let badge = '';
+    if(type === 'msq') badge = ' <span class="qtype-badge qtb-msq">MSQ</span>';
+    else if(type === 'nat') badge = ' <span class="qtype-badge qtb-nat">NAT</span>';
+    qpNumber.innerHTML = 'Question No. ' + displayNum + '  (' + (current+1) + ' of ' + N + ')' + badge;
+
     optionsWrap.innerHTML = '';
-    LETTERS.forEach(function(letter){
-      const row = document.createElement('div');
-      row.className = 'option-row' + (answers[current] === letter ? ' selected' : '');
-      row.innerHTML = '<span class="option-letter">'+letter+'</span><span class="option-text">Option '+letter+'</span>';
-      row.addEventListener('click', function(){ selectOption(letter); });
-      optionsWrap.appendChild(row);
-    });
+
+    if(type === 'nat'){
+      const wrap = document.createElement('div');
+      wrap.className = 'nat-input-wrap';
+      const label = document.createElement('label');
+      label.className = 'nat-input-label';
+      label.textContent = 'Enter your numeric answer';
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.setAttribute('inputmode','decimal');
+      inp.className = 'nat-input-box';
+      inp.value = (answers[current] !== null && answers[current] !== undefined) ? answers[current] : '';
+      inp.addEventListener('input', function(){ natAnswerChange(inp.value); });
+      const hint = document.createElement('div');
+      hint.className = 'nat-input-hint';
+      hint.textContent = 'Type your calculated value (decimals are fine).';
+      wrap.appendChild(label);
+      wrap.appendChild(inp);
+      wrap.appendChild(hint);
+      optionsWrap.appendChild(wrap);
+    } else {
+      if(type === 'msq'){
+        const hint = document.createElement('div');
+        hint.className = 'msq-hint';
+        hint.textContent = 'This is a Multiple Select Question — select all that apply.';
+        optionsWrap.appendChild(hint);
+      }
+      LETTERS.forEach(function(letter){
+        const row = document.createElement('div');
+        let isSel;
+        if(type === 'msq'){
+          isSel = Array.isArray(answers[current]) && answers[current].indexOf(letter) !== -1;
+        } else {
+          isSel = answers[current] === letter;
+        }
+        row.className = 'option-row' + (isSel ? ' selected' : '');
+        row.innerHTML = '<span class="option-letter">'+letter+'</span><span class="option-text">Option '+letter+'</span>';
+        row.addEventListener('click', function(){ selectOption(letter); });
+        optionsWrap.appendChild(row);
+      });
+    }
+
     prevBtn.disabled = (current === 0);
   }
 
   function selectOption(letter){
-    answers[current] = letter;
-    if(status[current] === 'marked' || status[current] === 'answered-marked'){
-      status[current] = 'answered-marked';
+    const type = qTypes[current] || 'mcq';
+    if(type === 'msq'){
+      let arr = Array.isArray(answers[current]) ? answers[current].slice() : [];
+      const idx = arr.indexOf(letter);
+      if(idx === -1) arr.push(letter); else arr.splice(idx,1);
+      answers[current] = arr.length ? arr : null;
     } else {
-      status[current] = 'answered';
+      answers[current] = letter;
+    }
+    if(status[current] === 'marked' || status[current] === 'answered-marked'){
+      status[current] = (answers[current] !== null) ? 'answered-marked' : 'marked';
+    } else {
+      status[current] = (answers[current] !== null) ? 'answered' : 'not-answered';
     }
     renderQuestion();
     renderGrid();
     renderLegendCounts();
+  }
+
+  function natAnswerChange(val){
+    answers[current] = (val !== undefined && val.trim() !== '') ? val : null;
+    if(status[current] === 'marked' || status[current] === 'answered-marked'){
+      status[current] = (answers[current] !== null) ? 'answered-marked' : 'marked';
+    } else {
+      status[current] = (answers[current] !== null) ? 'answered' : 'not-answered';
+    }
+    renderGrid();
+    renderLegendCounts();
+    // deliberately not calling renderQuestion() here — would rebuild the input
+    // and lose focus/cursor position while the user is still typing
   }
 
   clearBtn.addEventListener('click', function(){
@@ -1554,6 +1884,55 @@
   }
 
   // =========================================================
+  // SCORING HELPERS (type-aware: mcq / msq / nat)
+  // =========================================================
+  function isAnswerCorrect(i, answerKey){
+    const type = qTypes[i] || 'mcq';
+    const userAns = answers[i];
+    if(userAns === null || userAns === undefined) return false;
+    const correctAns = answerKey[i];
+    if(type === 'nat'){
+      const val = parseFloat(userAns);
+      if(isNaN(val) || !correctAns) return false;
+      return val >= (correctAns.min - 1e-9) && val <= (correctAns.max + 1e-9);
+    }
+    if(type === 'msq'){
+      if(!Array.isArray(userAns) || !Array.isArray(correctAns)) return false;
+      if(userAns.length !== correctAns.length) return false;
+      const a = userAns.slice().sort();
+      const b = correctAns.slice().sort();
+      for(let k=0;k<a.length;k++){ if(a[k] !== b[k]) return false; }
+      return true;
+    }
+    return userAns === correctAns;
+  }
+
+  function marksForQuestion(i, answerKey){
+    if(answers[i] === null) return 0; // unattempted — never penalized
+    if(isAnswerCorrect(i, answerKey)) return marksCorrect;
+    const type = qTypes[i] || 'mcq';
+    if(type === 'msq' || type === 'nat') return 0; // no negative marking for these types
+    return -marksWrong;
+  }
+
+  function formatUserAnswer(i){
+    const type = qTypes[i] || 'mcq';
+    const a = answers[i];
+    if(a === null || a === undefined) return '\u2014';
+    if(type === 'msq') return Array.isArray(a) ? a.slice().sort().join(', ') : '\u2014';
+    return a; // mcq letter or nat raw string
+  }
+
+  function formatKeyValue(i, answerKey){
+    const type = qTypes[i] || 'mcq';
+    const val = answerKey[i];
+    if(val === null || val === undefined) return '';
+    if(type === 'nat') return (val.min === val.max) ? String(val.min) : (val.min + '\u2013' + val.max);
+    if(type === 'msq') return Array.isArray(val) ? val.slice().sort().join(', ') : '';
+    return val;
+  }
+
+  // =========================================================
   // RESULTS
   // =========================================================
   function fmtDuration(ms){
@@ -1611,23 +1990,27 @@
     let correctC=0, wrongC=0, score=null;
     let correctTimeMs=0, wrongTimeMs=0, skippedTimeMs=0;
     if(answerKey){
-      answers.forEach(function(a,i){
-        if(a === null){
+      score = 0;
+      for(let i=0;i<N;i++){
+        if(answers[i] === null){
           skippedTimeMs += timeSpentMs[i];
-          return;
+          continue;
         }
-        if(a === answerKey[i]){ correctC++; correctTimeMs += timeSpentMs[i]; }
+        if(isAnswerCorrect(i, answerKey)){ correctC++; correctTimeMs += timeSpentMs[i]; }
         else { wrongC++; wrongTimeMs += timeSpentMs[i]; }
-      });
-      score = (correctC*marksCorrect - wrongC*marksWrong);
+        score += marksForQuestion(i, answerKey);
+      }
       const wastedTimeMs = wrongTimeMs + skippedTimeMs;
       const scoringTimeMs = correctTimeMs + wrongTimeMs + skippedTimeMs;
-      const efficiencyPct = scoringTimeMs > 0 ? Math.round((correctTimeMs / scoringTimeMs) * 100) : 0;
+      const timeEfficiencyPct = scoringTimeMs > 0 ? Math.round((correctTimeMs / scoringTimeMs) * 100) : 0;
+      const attemptedForAccuracy = correctC + wrongC;
+      const accuracyPct = attemptedForAccuracy > 0 ? Math.round((correctC / attemptedForAccuracy) * 100) : 0;
       statCards.push({num: correctC, lbl:'Correct', acc:'acc-green'});
       statCards.push({num: wrongC, lbl:'Wrong', acc:'acc-red'});
       statCards.push({num: score.toFixed(2), lbl:'Score', acc:'acc-blue'});
-      statCards.push({num: efficiencyPct + '%', lbl:'Efficiency', acc: efficiencyPct >= 50 ? 'acc-green' : 'acc-red'});
+      statCards.push({num: timeEfficiencyPct + '%', lbl:'Time Efficiency', acc: timeEfficiencyPct >= 50 ? 'acc-green' : 'acc-red'});
       statCards.push({num: fmtDuration(wastedTimeMs), lbl:'Time Wasted', acc:'acc-red'});
+      statCards.push({num: accuracyPct + '%', lbl:'Accuracy (Right vs Wrong)', acc: accuracyPct >= 50 ? 'acc-green' : 'acc-red'});
     }
 
     statGrid.innerHTML = statCards.map(function(c){
@@ -1656,14 +2039,22 @@
 
     renderTimeEfficiency(answerKey, correctTimeMs, wrongTimeMs, skippedTimeMs, correctC, wrongC, score, avgMs);
 
-    // --- score-key card note ---
-    if(answerKey){
-      keyNote.textContent = '';
-      keyNote.className = 'auto-note';
-      keyNote.textContent = '\u2713 Auto-scored using the answer key you entered before the test. Paste a different key below if you want to re-check against something else.';
+    // --- score-key card: hide entirely if this set has non-MCQ questions, since
+    //     preseeding was already mandatory and the paste-box only understands
+    //     single MCQ letters, not MSQ sets or NAT ranges ---
+    const hasNonMcqType = qTypes.some(function(t){ return t === 'msq' || t === 'nat'; });
+    if(hasNonMcqType){
+      scoreKeyCard.classList.add('hidden');
     } else {
-      keyNote.className = '';
-      keyNote.innerHTML = 'Paste your correct answers as letters in order, one per question — e.g. <span class="mono">A,C,B,D,A,...</span> or one per line. Only used in your browser, nothing is uploaded.';
+      scoreKeyCard.classList.remove('hidden');
+      if(answerKey){
+        keyNote.textContent = '';
+        keyNote.className = 'auto-note';
+        keyNote.textContent = '\u2713 Auto-scored using the answer key you entered before the test. Paste a different key below if you want to re-check against something else.';
+      } else {
+        keyNote.className = '';
+        keyNote.innerHTML = 'Paste your correct answers as letters in order, one per question — e.g. <span class="mono">A,C,B,D,A,...</span> or one per line. Only used in your browser, nothing is uploaded.';
+      }
     }
 
     colResultHeader.textContent = answerKey ? 'Correct / Wrong' : 'Result';
@@ -1673,12 +2064,13 @@
       const sl = statusLabel(status[i]);
       let resultCell = '<span class="tag tag-unchecked">\u2014</span>';
       if(answerKey){
+        const keyVal = formatKeyValue(i, answerKey);
         if(answers[i] === null){
-          resultCell = '<span class="tag tag-unchecked">Skipped (' + answerKey[i] + ')</span>';
-        } else if(answers[i] === answerKey[i]){
+          resultCell = '<span class="tag tag-unchecked">Skipped (' + keyVal + ')</span>';
+        } else if(isAnswerCorrect(i, answerKey)){
           resultCell = '<span class="tag tag-correct">Correct</span>';
         } else {
-          resultCell = '<span class="tag tag-wrong">Wrong ('+answerKey[i]+')</span>';
+          resultCell = '<span class="tag tag-wrong">Wrong (' + keyVal + ')</span>';
         }
       }
       const tCls = classifyTime(timeSpentMs[i], avgMs);
@@ -1687,7 +2079,7 @@
 
       rows += '<tr>'+
         '<td>'+(startNumber+i)+'</td>'+
-        '<td class="mono">'+ (answers[i] || '\u2014') +'</td>'+
+        '<td class="mono">'+ formatUserAnswer(i) +'</td>'+
         '<td><span class="tag '+sl.cls+'">'+sl.text+'</span></td>'+
         '<td>'+timeCell+'</td>'+
         '<td>'+resultCell+'</td>'+
@@ -1709,6 +2101,7 @@
     const wrongPct = scoringTimeMs > 0 ? Math.round((wrongTimeMs / scoringTimeMs) * 100) : 0;
     const skippedPct = Math.max(0, 100 - efficiencyPct - wrongPct);
     const wastedTimeMs = wrongTimeMs + skippedTimeMs;
+    const accuracyPct = (correctC + wrongC) > 0 ? Math.round((correctC / (correctC + wrongC)) * 100) : 0;
 
     // --- pie chart (pure CSS conic-gradient, no chart library needed) ---
     const correctEnd = efficiencyPct;
@@ -1729,7 +2122,7 @@
     // --- find the single costliest question that earned no marks ---
     let worstIdx = -1, worstMs = 0;
     for(let i=0;i<N;i++){
-      const isNonScoring = (answers[i] === null) || (answers[i] !== answerKey[i]);
+      const isNonScoring = (answers[i] === null) || !isAnswerCorrect(i, answerKey);
       if(isNonScoring && timeSpentMs[i] > worstMs){
         worstMs = timeSpentMs[i];
         worstIdx = i;
@@ -1739,6 +2132,7 @@
     // --- 4-5 line plain-language summary ---
     const lines = [];
     lines.push('You spent <strong>' + efficiencyPct + '%</strong> of your time on questions you answered correctly, and <strong>' + (100 - efficiencyPct) + '%</strong> (' + fmtDuration(wastedTimeMs) + ') on questions that were wrong or left unattempted.');
+    lines.push('Looking at accuracy alone (right vs. wrong, regardless of time spent): <strong>' + accuracyPct + '%</strong> of your attempted questions were correct (' + correctC + ' right, ' + wrongC + ' wrong).');
     lines.push('Your average pace was <strong>' + fmtDuration(avgMs) + '</strong> per question, against an allotted <strong>' + fmtDuration(idealMsPerQ) + '</strong> per question \u2014 ' + (paceGood ? 'faster' : 'slower') + ' than planned.');
     lines.push('That contributed to a score of <strong>' + score.toFixed(2) + '</strong>, from ' + correctC + ' correct and ' + wrongC + ' wrong answers out of ' + N + '.');
     if(worstIdx !== -1 && worstMs > 0){
@@ -1798,7 +2192,7 @@
     }
     const invalid = tokens.find(function(t){ return LETTERS.indexOf(t) === -1; });
     if(invalid){
-      keyErr.textContent = 'Only letters A, B, C or D are allowed — found "'+invalid+'".';
+      keyErr.textContent = 'Only letters A, B, C, D or E are allowed — found "'+invalid+'".';
       keyErr.style.display = 'block';
       return;
     }
