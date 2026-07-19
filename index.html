@@ -1559,22 +1559,45 @@
       if(preKeyTypes.length !== n){
         preKeyTypes = new Array(n).fill('mcq');
       }
-      let missingCount = 0;
+      const issues = [];
       for(let i=0;i<n;i++){
         const t = preKeyTypes[i];
         const a = preKeyAnswers[i];
+        const qLabel = 'Q' + (start + i);
         if(t === 'nat'){
-          if(!a || isNaN(parseFloat(a.minRaw)) || isNaN(parseFloat(a.maxRaw)) || parseFloat(a.minRaw) > parseFloat(a.maxRaw)){
-            missingCount++;
+          const minRaw = a ? a.minRaw : '';
+          const maxRaw = a ? a.maxRaw : '';
+          const minEmpty = (minRaw === undefined || minRaw === null || String(minRaw).trim() === '');
+          const maxEmpty = (maxRaw === undefined || maxRaw === null || String(maxRaw).trim() === '');
+          const minNum = parseFloat(minRaw);
+          const maxNum = parseFloat(maxRaw);
+          if(minEmpty && maxEmpty){
+            issues.push(qLabel + ': enter both a "from" and "to" value.');
+          } else if(minEmpty || isNaN(minNum)){
+            issues.push(qLabel + ': the "from" value is missing or not a number.');
+          } else if(maxEmpty || isNaN(maxNum)){
+            issues.push(qLabel + ': the "to" value is missing or not a number.');
+          } else if(minNum > maxNum){
+            issues.push(qLabel + ': "from" (' + minNum + ') is greater than "to" (' + maxNum + ') \u2014 swap them or fix the values.');
           }
         } else if(t === 'msq'){
-          if(!Array.isArray(a) || a.length === 0) missingCount++;
+          if(!Array.isArray(a) || a.length === 0){
+            issues.push(qLabel + ': no options selected \u2014 an MSQ needs at least one correct option.');
+          }
         } else {
-          if(a === null) missingCount++;
+          if(a === null){
+            issues.push(qLabel + ': no option selected.');
+          }
         }
       }
-      if(missingCount > 0){
-        showHomeErr('Please complete the correct answer for every question above (' + missingCount + ' remaining)' + (natMsqEnabled ? '.' : ' — or switch to "No" if you don\u2019t want auto-scoring.'));
+      if(issues.length > 0){
+        const shown = issues.slice(0, 6);
+        const extra = issues.length - shown.length;
+        let msg = 'Please fix the following before starting:<br>' + shown.join('<br>');
+        if(extra > 0) msg += '<br>+ ' + extra + ' more question' + (extra===1?'':'s') + ' still need' + (extra===1?'s':'') + ' an answer.';
+        if(!natMsqEnabled) msg += '<br>Or switch "Provide correct answers now" to "No" if you don\u2019t want auto-scoring.';
+        homeErr.innerHTML = msg;
+        homeErr.style.display = 'block';
         return;
       }
     }
